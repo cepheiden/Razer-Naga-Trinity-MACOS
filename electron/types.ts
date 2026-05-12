@@ -90,10 +90,16 @@ export interface NagaProfile {
   updatedAt: number
 }
 
+export interface AppSettings {
+  rgbOffOnLock: boolean
+  language?: 'de' | 'en'
+}
+
 export interface ProfileStore {
   version: number
   activeProfileId: string
   profiles: NagaProfile[]
+  settings?: AppSettings
 }
 
 export interface DeviceInfo {

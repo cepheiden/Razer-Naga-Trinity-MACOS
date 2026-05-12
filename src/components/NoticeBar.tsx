@@ -1,7 +1,9 @@
 import { Check, TriangleAlert, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useNagaStore } from '../store/useNagaStore'
 
 export function NoticeBar() {
+  const { t } = useTranslation()
   const notice = useNagaStore((state) => state.notice)
   const dismiss = useNagaStore((state) => state.dismissNotice)
 
@@ -18,7 +20,7 @@ export function NoticeBar() {
         type="button"
         className="notice-dismiss"
         onClick={dismiss}
-        aria-label="Hinweis schließen"
+        aria-label={t('notice.dismiss')}
       >
         <X size={14} />
       </button>

@@ -1,0 +1,152 @@
+{
+  "common": {
+    "connected": "Verbunden",
+    "disconnected": "Nicht gefunden",
+    "or": "oder",
+    "andDpi": "und DPI"
+  },
+  "sidebar": {
+    "brandSub": "Control Deck",
+    "rescan": "Neu scannen",
+    "hidInterfaces": "HID-Interfaces",
+    "profiles": "Profile",
+    "addProfile": "Profil hinzufügen",
+    "activeStage": "Aktive Stufe",
+    "dpiSuffix": "DPI"
+  },
+  "topbar": {
+    "profileEyebrow": "Profil",
+    "unsavedChanges": "Ungespeicherte Änderungen",
+    "duplicate": "Duplizieren",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "applying": "Übertrage…",
+    "applyToMouse": "An Maus senden",
+    "language": "Sprache"
+  },
+  "sections": {
+    "lighting": "Lighting",
+    "performance": "Performance",
+    "buttons": "Tasten",
+    "macros": "Makros"
+  },
+  "notice": {
+    "dismiss": "Hinweis schließen"
+  },
+  "storeNotices": {
+    "profileSaved": "Profil gespeichert.",
+    "bridgeUnavailable": "Electron-Bridge nicht verfügbar (Browser-Modus)."
+  },
+  "lighting": {
+    "livePreviewEyebrow": "Live-Vorschau",
+    "livePreviewTitle": "Beleuchtungssimulation",
+    "effectEyebrow": "Effekt",
+    "effectTitle": "RGB-Modus",
+    "colorEyebrow": "Farbe",
+    "primaryColor": "Primärfarbe",
+    "secondaryColor": "Sekundärfarbe",
+    "brightness": "Helligkeit",
+    "waveDirection": "Wellenrichtung",
+    "waveLeft": "← Links",
+    "waveRight": "Rechts →",
+    "reactiveSpeed": "Reaktionsgeschwindigkeit",
+    "zonesEyebrow": "Zonen",
+    "zonesTitle": "Individuelle Steuerung",
+    "zonesSync": "Zonen synchronisiert",
+    "zonesIndividual": "Pro Zone konfigurieren",
+    "zoneActivate": "aktivieren",
+    "zoneDeactivate": "deaktivieren",
+    "colorAria": "Farbe",
+    "secondaryColorAria": "Sekundärfarbe"
+  },
+  "zones": {
+    "logo": { "label": "Logo", "description": "Razer-Logo am Heck" },
+    "scroll": { "label": "Scroll", "description": "Mausrad-Beleuchtung" },
+    "side": { "label": "Underglow", "description": "Synchron auf alle Zonen" }
+  },
+  "effects": {
+    "static": { "label": "Static", "description": "Eine durchgehende Farbe pro Zone." },
+    "breathing": { "label": "Breathing", "description": "Sanftes Fade zwischen zwei Farben." },
+    "spectrum": { "label": "Spectrum", "description": "Voller Farbverlauf, hardwaregesteuert." },
+    "wave": { "label": "Wave", "description": "Welle über alle Zonen." },
+    "reactive": { "label": "Reactive", "description": "Aufleuchten beim Klick." },
+    "off": { "label": "Aus", "description": "LEDs vollständig deaktivieren." }
+  },
+  "reactive": {
+    "fast": "Schnell",
+    "medium": "Mittel",
+    "slow": "Langsam",
+    "verySlow": "Sehr langsam"
+  },
+  "performance": {
+    "sensitivityEyebrow": "Sensitivität",
+    "dpiStagesTitle": "DPI-Stufen",
+    "addStage": "Stufe hinzufügen",
+    "activeDpi": "Active DPI",
+    "stageActivateAria": "Stufe {{n}} aktivieren",
+    "removeStageAria": "Stufe entfernen",
+    "quickSelect": "Schnellauswahl",
+    "responseEyebrow": "Reaktionszeit",
+    "pollingTitle": "Polling Rate",
+    "pollingNote": "Höhere Polling-Raten erhöhen die Präzision und CPU-Last. 1000 Hz wird für Gaming empfohlen.",
+    "plateEyebrow": "Konfiguration",
+    "plateTitle": "Seitenplatte",
+    "plateButtons": "Seitentasten",
+    "plateNote": "Tasten und Belegung werden automatisch angepasst, wenn du die Seitenplatte tauschst."
+  },
+  "polling": {
+    "lowSub": "Stromsparend",
+    "midSub": "Ausgewogen",
+    "highSub": "Maximale Präzision"
+  },
+  "sidePlates": {
+    "two": { "label": "2-Tasten", "subtitle": "FPS / Casual" },
+    "seven": { "label": "7-Tasten", "subtitle": "MOBA / Action" },
+    "twelve": { "label": "12-Tasten", "subtitle": "MMO / Produktivität" }
+  },
+  "buttons": {
+    "baseEyebrow": "Standard",
+    "baseTitle": "Maustasten",
+    "bindings": "Belegungen",
+    "sidePlateEyebrow": "Seitenplatte ·",
+    "sideTitle": "Side Panel ({{count}} Tasten)",
+    "macroPick": "— Makro wählen —",
+    "keyPlaceholder": "z.B. F5, Shift+1, Strg+C"
+  },
+  "actions": {
+    "default": "Standard",
+    "key": "Taste",
+    "macro": "Makro",
+    "dpi-up": "DPI +",
+    "dpi-down": "DPI −",
+    "dpi-cycle": "DPI Cycle",
+    "profile-cycle": "Profil wechseln",
+    "mouse-button": "Maustaste",
+    "disabled": "Deaktiviert"
+  },
+  "macros": {
+    "automationEyebrow": "Automatisierung",
+    "title": "Makros",
+    "newMacro": "Neues Makro",
+    "emptyTitle": "Noch keine Makros",
+    "emptyBody": "Erstelle Makros, um sie später auf Seitentasten zu legen.",
+    "deleteMacro": "Makro löschen",
+    "addStep": "Schritt hinzufügen",
+    "removeStep": "Schritt entfernen",
+    "stepPlaceholderText": "Text eingeben",
+    "stepPlaceholderMouse": "Mouse 4",
+    "stepPlaceholderKey": "Taste",
+    "repeatModes": {
+      "once": "Einmalig",
+      "count": "Anzahl",
+      "while-held": "Gedrückt halten",
+      "toggle": "Umschalten"
+    },
+    "stepTypes": {
+      "key": "Taste",
+      "text": "Text",
+      "mouse": "Maus",
+      "delay": "Pause"
+    }
+  }
+}

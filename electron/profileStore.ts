@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { app } from 'electron'
 import { join } from 'node:path'
 import type {
+  AppSettings,
   ButtonBinding,
   Macro,
   NagaProfile,
@@ -11,6 +12,15 @@ import type {
 } from './types'
 
 const STORE_VERSION = 2
+
+const defaultSettings = (): AppSettings => ({
+  rgbOffOnLock: true,
+})
+
+const mergeSettings = (incoming: Partial<AppSettings> | undefined): AppSettings => ({
+  ...defaultSettings(),
+  ...(incoming ?? {}),
+})
 
 const SIDE_PLATE_LABELS: Record<SidePlate, string[]> = {
   two: ['Side 1', 'Side 2'],
@@ -159,6 +169,7 @@ const createInitialStore = (): ProfileStore => {
     version: STORE_VERSION,
     activeProfileId: profile.id,
     profiles: [profile],
+    settings: defaultSettings(),
   }
 }
 
@@ -191,6 +202,7 @@ const migrate = (raw: unknown): ProfileStore => {
           ? store.activeProfileId
           : profiles[0].id,
       profiles,
+      settings: mergeSettings(store.settings),
     }
   }
 
@@ -208,9 +220,23 @@ export const readStore = async (): Promise<ProfileStore> => {
 
 export const writeStore = async (store: ProfileStore): Promise<ProfileStore> => {
   await mkdir(app.getPath('userData'), { recursive: true })
-  const next: ProfileStore = { ...store, version: STORE_VERSION }
+  const next: ProfileStore = {
+    ...store,
+    version: STORE_VERSION,
+    settings: mergeSettings(store.settings),
+  }
   await writeFile(storePath(), JSON.stringify(next, null, 2), 'utf8')
   return next
+}
+
+export const updateSettings = async (
+  partial: Partial<AppSettings>,
+): Promise<ProfileStore> => {
+  const store = await readStore()
+  return writeStore({
+    ...store,
+    settings: mergeSettings({ ...store.settings, ...partial }),
+  })
 }
 
 export const upsertProfile = async (profile: NagaProfile): Promise<ProfileStore> => {

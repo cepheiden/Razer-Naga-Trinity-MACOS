@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { Eye, EyeOff, Link2, Link2Off } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
 import { MouseVisualizer } from './MouseVisualizer'
-import { COLOR_SWATCHES, REACTIVE_SPEEDS, RGB_EFFECTS } from '../lib/constants'
+import { COLOR_SWATCHES, REACTIVE_SPEEDS, RGB_EFFECT_IDS } from '../lib/constants'
 import type {
   LedZone,
   ReactiveSpeed,
@@ -10,13 +11,10 @@ import type {
   WaveDirection,
 } from '../../electron/types'
 
-const ZONES: Array<{ id: LedZone; label: string; description: string }> = [
-  { id: 'logo', label: 'Logo', description: 'Razer-Logo am Heck' },
-  { id: 'scroll', label: 'Scroll', description: 'Mausrad-Beleuchtung' },
-  { id: 'side', label: 'Underglow', description: 'Synchron auf alle Zonen' },
-]
+const ZONE_IDS: readonly LedZone[] = ['logo', 'scroll', 'side']
 
 export function LightingPanel() {
+  const { t } = useTranslation()
   const profile = useActiveProfile()
   const updateRgb = useNagaStore((state) => state.updateRgb)
   const { rgb } = profile
@@ -45,36 +43,32 @@ export function LightingPanel() {
       <div className="card stage-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow">Live-Vorschau</p>
-            <h3>Beleuchtungssimulation</h3>
+            <p className="eyebrow">{t('lighting.livePreviewEyebrow')}</p>
+            <h3>{t('lighting.livePreviewTitle')}</h3>
           </div>
-          <span className="badge">{RGB_EFFECTS.find((effect) => effect.id === rgb.effect)?.label}</span>
+          <span className="badge">{t(`effects.${rgb.effect}.label`)}</span>
         </header>
         <MouseVisualizer profile={profile} />
-        <p className="muted">
-          {RGB_EFFECTS.find((effect) => effect.id === rgb.effect)?.description}
-        </p>
+        <p className="muted">{t(`effects.${rgb.effect}.description`)}</p>
       </div>
 
       <div className="card effects-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow">Effekt</p>
-            <h3>RGB-Modus</h3>
+            <p className="eyebrow">{t('lighting.effectEyebrow')}</p>
+            <h3>{t('lighting.effectTitle')}</h3>
           </div>
         </header>
         <div className="effect-grid">
-          {RGB_EFFECTS.map((effect) => (
+          {RGB_EFFECT_IDS.map((effectId) => (
             <button
-              key={effect.id}
+              key={effectId}
               type="button"
-              className={`effect-tile ${rgb.effect === effect.id ? 'active' : ''}`}
-              onClick={() =>
-                updateRgb((current) => ({ ...current, effect: effect.id as RgbEffect }))
-              }
+              className={`effect-tile ${rgb.effect === effectId ? 'active' : ''}`}
+              onClick={() => updateRgb((current) => ({ ...current, effect: effectId as RgbEffect }))}
             >
-              <span className="effect-label">{effect.label}</span>
-              <span className="effect-description">{effect.description}</span>
+              <span className="effect-label">{t(`effects.${effectId}.label`)}</span>
+              <span className="effect-description">{t(`effects.${effectId}.description`)}</span>
             </button>
           ))}
         </div>
@@ -83,8 +77,8 @@ export function LightingPanel() {
       <div className="card color-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow">Farbe</p>
-            <h3>Primärfarbe</h3>
+            <p className="eyebrow">{t('lighting.colorEyebrow')}</p>
+            <h3>{t('lighting.primaryColor')}</h3>
           </div>
           <div className="hex-readout">{rgb.color.toUpperCase()}</div>
         </header>
@@ -105,7 +99,7 @@ export function LightingPanel() {
                 type="button"
                 className={`swatch ${rgb.color === swatch ? 'selected' : ''}`}
                 style={{ background: swatch }}
-                aria-label={`Farbe ${swatch}`}
+                aria-label={`${t('lighting.colorAria')} ${swatch}`}
                 onClick={() => updateRgb((current) => ({ ...current, color: swatch }))}
               />
             ))}
@@ -116,8 +110,8 @@ export function LightingPanel() {
           <>
             <header className="card-head sub">
               <div>
-                <p className="eyebrow">Farbe</p>
-                <h3>Sekundärfarbe</h3>
+                <p className="eyebrow">{t('lighting.colorEyebrow')}</p>
+                <h3>{t('lighting.secondaryColor')}</h3>
               </div>
               <div className="hex-readout">{rgb.secondaryColor.toUpperCase()}</div>
             </header>
@@ -139,7 +133,7 @@ export function LightingPanel() {
                     type="button"
                     className={`swatch ${rgb.secondaryColor === swatch ? 'selected' : ''}`}
                     style={{ background: swatch }}
-                    aria-label={`Sekundärfarbe ${swatch}`}
+                    aria-label={`${t('lighting.secondaryColorAria')} ${swatch}`}
                     onClick={() =>
                       updateRgb((current) => ({ ...current, secondaryColor: swatch }))
                     }
@@ -152,7 +146,7 @@ export function LightingPanel() {
 
         <div className="slider-row">
           <label>
-            <span>Helligkeit</span>
+            <span>{t('lighting.brightness')}</span>
             <input
               type="range"
               min={0}
@@ -171,7 +165,7 @@ export function LightingPanel() {
 
         {usesWaveDirection && (
           <div className="segment-control">
-            <span className="segment-label">Wellenrichtung</span>
+            <span className="segment-label">{t('lighting.waveDirection')}</span>
             <div className="segment">
               {(['left', 'right'] as WaveDirection[]).map((direction) => (
                 <button
@@ -182,7 +176,7 @@ export function LightingPanel() {
                     updateRgb((current) => ({ ...current, waveDirection: direction }))
                   }
                 >
-                  {direction === 'left' ? '← Links' : 'Rechts →'}
+                  {direction === 'left' ? t('lighting.waveLeft') : t('lighting.waveRight')}
                 </button>
               ))}
             </div>
@@ -191,7 +185,7 @@ export function LightingPanel() {
 
         {usesReactiveSpeed && (
           <div className="segment-control">
-            <span className="segment-label">Reaktionsgeschwindigkeit</span>
+            <span className="segment-label">{t('lighting.reactiveSpeed')}</span>
             <div className="segment">
               {REACTIVE_SPEEDS.map((speed) => (
                 <button
@@ -205,7 +199,7 @@ export function LightingPanel() {
                     }))
                   }
                 >
-                  {speed.label}
+                  {t(speed.labelKey)}
                 </button>
               ))}
             </div>
@@ -216,8 +210,8 @@ export function LightingPanel() {
       <div className="card zones-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow">Zonen</p>
-            <h3>Individuelle Steuerung</h3>
+            <p className="eyebrow">{t('lighting.zonesEyebrow')}</p>
+            <h3>{t('lighting.zonesTitle')}</h3>
           </div>
           <button
             type="button"
@@ -227,32 +221,37 @@ export function LightingPanel() {
             }
           >
             {rgb.syncZones ? <Link2 size={14} /> : <Link2Off size={14} />}
-            {rgb.syncZones ? 'Zonen synchronisiert' : 'Pro Zone konfigurieren'}
+            {rgb.syncZones ? t('lighting.zonesSync') : t('lighting.zonesIndividual')}
           </button>
         </header>
 
         <div className="zone-grid">
-          {ZONES.map((zone) => {
-            const zoneConfig = rgb.zones[zone.id]
+          {ZONE_IDS.map((zoneId) => {
+            const zoneConfig = rgb.zones[zoneId]
+            const zoneLabel = t(`zones.${zoneId}.label`)
+            const zoneDescription = t(`zones.${zoneId}.description`)
+            const toggleLabel = zoneConfig.enabled
+              ? t('lighting.zoneDeactivate')
+              : t('lighting.zoneActivate')
             return (
-              <div className={`zone-tile ${zoneConfig.enabled ? '' : 'disabled'}`} key={zone.id}>
+              <div className={`zone-tile ${zoneConfig.enabled ? '' : 'disabled'}`} key={zoneId}>
                 <div className="zone-head">
                   <div>
-                    <strong>{zone.label}</strong>
-                    <small>{zone.description}</small>
+                    <strong>{zoneLabel}</strong>
+                    <small>{zoneDescription}</small>
                   </div>
                   <button
                     type="button"
                     className="icon-button small"
-                    aria-label={`Zone ${zone.label} ${zoneConfig.enabled ? 'deaktivieren' : 'aktivieren'}`}
+                    aria-label={`${zoneLabel} ${toggleLabel}`}
                     onClick={() =>
                       updateRgb((current) => ({
                         ...current,
                         zones: {
                           ...current.zones,
-                          [zone.id]: {
-                            ...current.zones[zone.id],
-                            enabled: !current.zones[zone.id].enabled,
+                          [zoneId]: {
+                            ...current.zones[zoneId],
+                            enabled: !current.zones[zoneId].enabled,
                           },
                         },
                       }))
@@ -270,7 +269,7 @@ export function LightingPanel() {
                       ...current,
                       zones: {
                         ...current.zones,
-                        [zone.id]: { ...current.zones[zone.id], color: event.target.value },
+                        [zoneId]: { ...current.zones[zoneId], color: event.target.value },
                       },
                     }))
                   }

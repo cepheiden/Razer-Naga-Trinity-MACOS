@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import i18n from '../i18n'
 import type {
   ApplyResult,
   DeviceInfo,
@@ -255,12 +256,12 @@ export const useNagaStore = create<NagaState>((set, get) => ({
       set({
         store,
         hasUnsavedChanges: false,
-        notice: { ok: true, message: 'Profil gespeichert.', tone: 'success' },
+        notice: { ok: true, message: i18n.t('storeNotices.profileSaved'), tone: 'success' },
       })
     } else {
       set({
         hasUnsavedChanges: false,
-        notice: { ok: true, message: 'Profil gespeichert.', tone: 'success' },
+        notice: { ok: true, message: i18n.t('storeNotices.profileSaved'), tone: 'success' },
       })
     }
   },
@@ -274,7 +275,7 @@ export const useNagaStore = create<NagaState>((set, get) => ({
         isApplying: false,
         notice: {
           ok: false,
-          message: 'Electron-Bridge nicht verfügbar (Browser-Modus).',
+          message: i18n.t('storeNotices.bridgeUnavailable'),
           tone: 'error',
         },
       })

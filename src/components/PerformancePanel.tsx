@@ -1,6 +1,12 @@
 import { Crosshair, Gauge, Layers, MinusCircle, PlusCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
-import { DPI_PRESETS, POLLING_RATES, SIDE_PLATES } from '../lib/constants'
+import {
+  DPI_PRESETS,
+  POLLING_RATES,
+  SIDE_PLATE_BUTTONS,
+  SIDE_PLATE_IDS,
+} from '../lib/constants'
 import type { PollingRate } from '../../electron/types'
 
 const newId = () =>
@@ -9,6 +15,7 @@ const newId = () =>
     : `id-${Math.random().toString(36).slice(2, 11)}`
 
 export function PerformancePanel() {
+  const { t } = useTranslation()
   const profile = useActiveProfile()
   const updateActive = useNagaStore((state) => state.updateActive)
   const setSidePlate = useNagaStore((state) => state.setSidePlate)
@@ -62,8 +69,10 @@ export function PerformancePanel() {
       <div className="card dpi-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow"><Crosshair size={12} /> Sensitivität</p>
-            <h3>DPI-Stufen</h3>
+            <p className="eyebrow">
+              <Crosshair size={12} /> {t('performance.sensitivityEyebrow')}
+            </p>
+            <h3>{t('performance.dpiStagesTitle')}</h3>
           </div>
           <button
             type="button"
@@ -72,14 +81,14 @@ export function PerformancePanel() {
             disabled={dpi.stages.length >= 5}
           >
             <PlusCircle size={14} />
-            Stufe hinzufügen
+            {t('performance.addStage')}
           </button>
         </header>
 
         <div className="dpi-hero">
           <div className="dpi-value">
             <strong>{activeStage?.x ?? 1800}</strong>
-            <span>Active DPI</span>
+            <span>{t('performance.activeDpi')}</span>
           </div>
           <div className="dpi-meta">
             <span>X · {activeStage?.x ?? 0}</span>
@@ -96,7 +105,7 @@ export function PerformancePanel() {
                   type="button"
                   className="stage-marker"
                   onClick={() => setActiveStage(index)}
-                  aria-label={`Stufe ${index + 1} aktivieren`}
+                  aria-label={t('performance.stageActivateAria', { n: index + 1 })}
                 >
                   <span>{index + 1}</span>
                 </button>
@@ -130,7 +139,7 @@ export function PerformancePanel() {
                   className="icon-button small ghost"
                   onClick={() => removeStage(stage.id)}
                   disabled={dpi.stages.length <= 1}
-                  aria-label="Stufe entfernen"
+                  aria-label={t('performance.removeStageAria')}
                 >
                   <MinusCircle size={15} />
                 </button>
@@ -140,7 +149,7 @@ export function PerformancePanel() {
         </div>
 
         <div className="preset-row">
-          <span className="preset-label">Schnellauswahl</span>
+          <span className="preset-label">{t('performance.quickSelect')}</span>
           <div className="preset-grid">
             {DPI_PRESETS.map((dpiValue) => (
               <button
@@ -170,8 +179,10 @@ export function PerformancePanel() {
       <div className="card polling-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow"><Gauge size={12} /> Reaktionszeit</p>
-            <h3>Polling Rate</h3>
+            <p className="eyebrow">
+              <Gauge size={12} /> {t('performance.responseEyebrow')}
+            </p>
+            <h3>{t('performance.pollingTitle')}</h3>
           </div>
         </header>
 
@@ -189,39 +200,39 @@ export function PerformancePanel() {
               }
             >
               <strong>{rate.label}</strong>
-              <span>{rate.sublabel}</span>
+              <span>{t(rate.sublabelKey)}</span>
             </button>
           ))}
         </div>
-        <p className="muted small">
-          Höhere Polling-Raten erhöhen die Präzision und CPU-Last. 1000 Hz wird für Gaming empfohlen.
-        </p>
+        <p className="muted small">{t('performance.pollingNote')}</p>
       </div>
 
       <div className="card plate-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow"><Layers size={12} /> Konfiguration</p>
-            <h3>Seitenplatte</h3>
+            <p className="eyebrow">
+              <Layers size={12} /> {t('performance.plateEyebrow')}
+            </p>
+            <h3>{t('performance.plateTitle')}</h3>
           </div>
         </header>
         <div className="plate-grid">
-          {SIDE_PLATES.map((plate) => (
+          {SIDE_PLATE_IDS.map((plate) => (
             <button
-              key={plate.value}
+              key={plate}
               type="button"
-              className={`plate-tile ${sidePlate === plate.value ? 'active' : ''}`}
-              onClick={() => setSidePlate(plate.value)}
+              className={`plate-tile ${sidePlate === plate ? 'active' : ''}`}
+              onClick={() => setSidePlate(plate)}
             >
-              <strong>{plate.label}</strong>
-              <span>{plate.subtitle}</span>
-              <small>{plate.buttons} Seitentasten</small>
+              <strong>{t(`sidePlates.${plate}.label`)}</strong>
+              <span>{t(`sidePlates.${plate}.subtitle`)}</span>
+              <small>
+                {SIDE_PLATE_BUTTONS[plate]} {t('performance.plateButtons')}
+              </small>
             </button>
           ))}
         </div>
-        <p className="muted small">
-          Tasten und Belegung werden automatisch angepasst, wenn du die Seitenplatte tauschst.
-        </p>
+        <p className="muted small">{t('performance.plateNote')}</p>
       </div>
     </div>
   )

@@ -1,0 +1,152 @@
+{
+  "common": {
+    "connected": "Connected",
+    "disconnected": "Not found",
+    "or": "or",
+    "andDpi": "and DPI"
+  },
+  "sidebar": {
+    "brandSub": "Control Deck",
+    "rescan": "Rescan",
+    "hidInterfaces": "HID interfaces",
+    "profiles": "Profiles",
+    "addProfile": "Add profile",
+    "activeStage": "Active stage",
+    "dpiSuffix": "DPI"
+  },
+  "topbar": {
+    "profileEyebrow": "Profile",
+    "unsavedChanges": "Unsaved changes",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "save": "Save",
+    "applying": "Sending…",
+    "applyToMouse": "Send to mouse",
+    "language": "Language"
+  },
+  "sections": {
+    "lighting": "Lighting",
+    "performance": "Performance",
+    "buttons": "Keys",
+    "macros": "Macros"
+  },
+  "notice": {
+    "dismiss": "Dismiss notice"
+  },
+  "storeNotices": {
+    "profileSaved": "Profile saved.",
+    "bridgeUnavailable": "Electron bridge unavailable (browser mode)."
+  },
+  "lighting": {
+    "livePreviewEyebrow": "Live preview",
+    "livePreviewTitle": "Lighting simulation",
+    "effectEyebrow": "Effect",
+    "effectTitle": "RGB mode",
+    "colorEyebrow": "Color",
+    "primaryColor": "Primary color",
+    "secondaryColor": "Secondary color",
+    "brightness": "Brightness",
+    "waveDirection": "Wave direction",
+    "waveLeft": "← Left",
+    "waveRight": "Right →",
+    "reactiveSpeed": "Reactive speed",
+    "zonesEyebrow": "Zones",
+    "zonesTitle": "Per-zone control",
+    "zonesSync": "Zones synchronised",
+    "zonesIndividual": "Configure per zone",
+    "zoneActivate": "activate",
+    "zoneDeactivate": "deactivate",
+    "colorAria": "Color",
+    "secondaryColorAria": "Secondary color"
+  },
+  "zones": {
+    "logo": { "label": "Logo", "description": "Razer logo at the back" },
+    "scroll": { "label": "Scroll", "description": "Scroll-wheel illumination" },
+    "side": { "label": "Underglow", "description": "Mirrors all zones in sync" }
+  },
+  "effects": {
+    "static": { "label": "Static", "description": "One solid color per zone." },
+    "breathing": { "label": "Breathing", "description": "Soft fade between two colors." },
+    "spectrum": { "label": "Spectrum", "description": "Full color cycle, controlled by hardware." },
+    "wave": { "label": "Wave", "description": "Wave across all zones." },
+    "reactive": { "label": "Reactive", "description": "Glows on click." },
+    "off": { "label": "Off", "description": "Turn LEDs off completely." }
+  },
+  "reactive": {
+    "fast": "Fast",
+    "medium": "Medium",
+    "slow": "Slow",
+    "verySlow": "Very slow"
+  },
+  "performance": {
+    "sensitivityEyebrow": "Sensitivity",
+    "dpiStagesTitle": "DPI stages",
+    "addStage": "Add stage",
+    "activeDpi": "Active DPI",
+    "stageActivateAria": "Activate stage {{n}}",
+    "removeStageAria": "Remove stage",
+    "quickSelect": "Quick select",
+    "responseEyebrow": "Response time",
+    "pollingTitle": "Polling rate",
+    "pollingNote": "Higher polling rates increase precision and CPU load. 1000 Hz is recommended for gaming.",
+    "plateEyebrow": "Configuration",
+    "plateTitle": "Side plate",
+    "plateButtons": "side buttons",
+    "plateNote": "Keys and bindings adjust automatically when you swap the side plate."
+  },
+  "polling": {
+    "lowSub": "Power-saving",
+    "midSub": "Balanced",
+    "highSub": "Maximum precision"
+  },
+  "sidePlates": {
+    "two": { "label": "2-key", "subtitle": "FPS / Casual" },
+    "seven": { "label": "7-key", "subtitle": "MOBA / Action" },
+    "twelve": { "label": "12-key", "subtitle": "MMO / Productivity" }
+  },
+  "buttons": {
+    "baseEyebrow": "Standard",
+    "baseTitle": "Mouse buttons",
+    "bindings": "bindings",
+    "sidePlateEyebrow": "Side plate ·",
+    "sideTitle": "Side panel ({{count}} keys)",
+    "macroPick": "— pick a macro —",
+    "keyPlaceholder": "e.g. F5, Shift+1, Ctrl+C"
+  },
+  "actions": {
+    "default": "Default",
+    "key": "Key",
+    "macro": "Macro",
+    "dpi-up": "DPI +",
+    "dpi-down": "DPI −",
+    "dpi-cycle": "DPI cycle",
+    "profile-cycle": "Switch profile",
+    "mouse-button": "Mouse button",
+    "disabled": "Disabled"
+  },
+  "macros": {
+    "automationEyebrow": "Automation",
+    "title": "Macros",
+    "newMacro": "New macro",
+    "emptyTitle": "No macros yet",
+    "emptyBody": "Create macros so you can map them onto side keys later.",
+    "deleteMacro": "Delete macro",
+    "addStep": "Add step",
+    "removeStep": "Remove step",
+    "stepPlaceholderText": "Enter text",
+    "stepPlaceholderMouse": "Mouse 4",
+    "stepPlaceholderKey": "Key",
+    "repeatModes": {
+      "once": "Once",
+      "count": "Count",
+      "while-held": "While held",
+      "toggle": "Toggle"
+    },
+    "stepTypes": {
+      "key": "Key",
+      "text": "Text",
+      "mouse": "Mouse",
+      "delay": "Delay"
+    }
+  }
+}

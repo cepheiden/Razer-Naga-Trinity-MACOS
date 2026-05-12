@@ -17,10 +17,11 @@ import {
   duplicateProfile,
   readStore,
   setActiveProfile,
+  updateSettings,
   upsertProfile,
   writeStore,
 } from './profileStore'
-import type { NagaProfile, ProfileStore, RgbSettings } from './types'
+import type { AppSettings, NagaProfile, ProfileStore, RgbSettings } from './types'
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL)
 
@@ -30,6 +31,12 @@ const TRAY_ICON_DATA_URL =
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
+let cachedRgbOffOnLock = true
+
+const refreshSettingsCache = async () => {
+  const store = await readStore()
+  cachedRgbOffOnLock = store.settings?.rgbOffOnLock !== false
+}
 
 const createWindow = async () => {
   if (mainWindow) {
@@ -115,6 +122,17 @@ const buildTrayMenu = () =>
         })
       },
     },
+    {
+      label: 'RGB beim Sperren ausschalten',
+      type: 'checkbox',
+      checked: cachedRgbOffOnLock,
+      click: (item) => {
+        cachedRgbOffOnLock = item.checked
+        void updateSettings({ rgbOffOnLock: item.checked }).then(() => {
+          tray?.setContextMenu(buildTrayMenu())
+        })
+      },
+    },
     { type: 'separator' },
     {
       label: 'Beenden',
@@ -162,15 +180,24 @@ const restoreActiveProfileRgb = async () => {
   void applyRgbOnly(active.rgb)
 }
 
+const shouldDimOnLock = async () => {
+  const store = await readStore()
+  return store.settings?.rgbOffOnLock !== false
+}
+
 const registerPowerHandlers = () => {
   powerMonitor.on('lock-screen', () => {
-    void setRgbOff()
+    void shouldDimOnLock().then((dim) => {
+      if (dim) void setRgbOff()
+    })
   })
   powerMonitor.on('unlock-screen', () => {
     void restoreActiveProfileRgb()
   })
   powerMonitor.on('suspend', () => {
-    void setRgbOff()
+    void shouldDimOnLock().then((dim) => {
+      if (dim) void setRgbOff()
+    })
   })
   powerMonitor.on('resume', () => {
     void restoreActiveProfileRgb()
@@ -206,9 +233,20 @@ ipcMain.handle('app:hide-window', () => {
   mainWindow?.hide()
   app.dock?.hide()
 })
+ipcMain.handle('app:get-settings', async () => {
+  const store = await readStore()
+  return store.settings ?? { rgbOffOnLock: true }
+})
+ipcMain.handle('app:update-settings', async (_event, partial: Partial<AppSettings>) => {
+  const next = await updateSettings(partial)
+  cachedRgbOffOnLock = next.settings?.rgbOffOnLock !== false
+  tray?.setContextMenu(buildTrayMenu())
+  return next.settings ?? { rgbOffOnLock: true }
+})
 
 app.whenReady().then(async () => {
   ensureAccessibilityPermission()
+  await refreshSettingsCache()
   registerPowerHandlers()
   createTray()
 

@@ -1,7 +1,10 @@
-import { MousePointer2, Plus, Radar, RefreshCw } from 'lucide-react'
+import { Languages, MousePointer2, Plus, Radar, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
 
 export function Sidebar() {
+  const { t, i18n } = useTranslation()
   const device = useNagaStore((state) => state.device)
   const store = useNagaStore((state) => state.store)
   const active = useActiveProfile()
@@ -10,6 +13,7 @@ export function Sidebar() {
   const rescan = useNagaStore((state) => state.rescan)
 
   const activeStage = active.dpi.stages[active.dpi.activeStage - 1] ?? active.dpi.stages[0]
+  const currentLang = (i18n.resolvedLanguage ?? i18n.language ?? 'de').slice(0, 2) as SupportedLanguage
 
   return (
     <aside className="sidebar">
@@ -19,7 +23,7 @@ export function Sidebar() {
         </div>
         <div className="brand-text">
           <span>Naga Trinity</span>
-          <strong>Control Deck</strong>
+          <strong>{t('sidebar.brandSub')}</strong>
         </div>
       </div>
 
@@ -30,13 +34,13 @@ export function Sidebar() {
         <div className="device-meta">
           <span className={`pill ${device.connected ? 'good' : 'warn'}`}>
             <span className="pill-dot" />
-            {device.connected ? 'Verbunden' : 'Nicht gefunden'}
+            {device.connected ? t('common.connected') : t('common.disconnected')}
           </span>
           <h2>{device.productName || 'Razer Naga Trinity'}</h2>
           <p>
             VID:PID <strong>1532:0067</strong>
             <span className="dot-sep">·</span>
-            {device.interfaces || 0} HID-Interfaces
+            {device.interfaces || 0} {t('sidebar.hidInterfaces')}
           </p>
         </div>
         <button
@@ -45,24 +49,24 @@ export function Sidebar() {
           onClick={() => void rescan()}
         >
           <RefreshCw size={14} />
-          Neu scannen
+          {t('sidebar.rescan')}
         </button>
       </div>
 
       <div className="profile-section">
         <header>
-          <span>Profile</span>
+          <span>{t('sidebar.profiles')}</span>
           <button
             type="button"
             className="icon-button small"
             onClick={() => void createProfile()}
-            aria-label="Profil hinzufügen"
+            aria-label={t('sidebar.addProfile')}
           >
             <Plus size={14} />
           </button>
         </header>
 
-        <nav className="profile-list" aria-label="Profile">
+        <nav className="profile-list" aria-label={t('sidebar.profiles')}>
           {store.profiles.map((item) => (
             <button
               className={`profile ${item.id === active.id ? 'active' : ''}`}
@@ -73,7 +77,7 @@ export function Sidebar() {
               <div className="profile-info">
                 <span>{item.name}</span>
                 <small>
-                  {item.dpi.stages[item.dpi.activeStage - 1]?.x ?? 1800} DPI
+                  {item.dpi.stages[item.dpi.activeStage - 1]?.x ?? 1800} {t('sidebar.dpiSuffix')}
                   <span className="dot-sep">·</span>
                   {item.pollingRate}Hz
                 </small>
@@ -89,8 +93,24 @@ export function Sidebar() {
       </div>
 
       <footer className="sidebar-footer">
-        <span>Aktive Stufe</span>
-        <strong>{activeStage?.x ?? 1800} DPI</strong>
+        <div className="footer-stage">
+          <span>{t('sidebar.activeStage')}</span>
+          <strong>{activeStage?.x ?? 1800} {t('sidebar.dpiSuffix')}</strong>
+        </div>
+        <div className="lang-switch" role="group" aria-label={t('topbar.language')}>
+          <Languages size={13} />
+          {SUPPORTED_LANGUAGES.map((code) => (
+            <button
+              key={code}
+              type="button"
+              className={`lang-button ${currentLang === code ? 'active' : ''}`}
+              onClick={() => void i18n.changeLanguage(code)}
+              aria-pressed={currentLang === code}
+            >
+              {code.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </footer>
     </aside>
   )

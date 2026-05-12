@@ -15,10 +15,13 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "i18next": "^26.1.0",
+    "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^1.14.0",
     "node-hid": "^3.3.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-i18next": "^17.0.7",
     "usb": "^2.17.0",
     "zustand": "^5.0.13"
   },

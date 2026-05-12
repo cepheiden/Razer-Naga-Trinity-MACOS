@@ -9,17 +9,19 @@ import {
   Wand2,
   Zap,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
 import type { SectionId } from '../store/useNagaStore'
 
-const SECTIONS: Array<{ id: SectionId; label: string; icon: typeof Lightbulb }> = [
-  { id: 'lighting', label: 'Lighting', icon: Lightbulb },
-  { id: 'performance', label: 'Performance', icon: SlidersHorizontal },
-  { id: 'buttons', label: 'Tasten', icon: Keyboard },
-  { id: 'macros', label: 'Makros', icon: Cpu },
+const SECTIONS: Array<{ id: SectionId; icon: typeof Lightbulb }> = [
+  { id: 'lighting', icon: Lightbulb },
+  { id: 'performance', icon: SlidersHorizontal },
+  { id: 'buttons', icon: Keyboard },
+  { id: 'macros', icon: Cpu },
 ]
 
 export function Topbar() {
+  const { t } = useTranslation()
   const active = useActiveProfile()
   const section = useNagaStore((state) => state.section)
   const setSection = useNagaStore((state) => state.setSection)
@@ -35,7 +37,7 @@ export function Topbar() {
     <header className="topbar">
       <div className="topbar-row">
         <div className="topbar-title">
-          <p className="eyebrow">Profil</p>
+          <p className="eyebrow">{t('topbar.profileEyebrow')}</p>
           <input
             className="profile-name"
             value={active.name}
@@ -44,7 +46,7 @@ export function Topbar() {
             }
             spellCheck={false}
           />
-          {dirty && <span className="dirty-dot" aria-label="Ungespeicherte Änderungen" />}
+          {dirty && <span className="dirty-dot" aria-label={t('topbar.unsavedChanges')} />}
         </div>
         <div className="topbar-actions">
           <button
@@ -53,7 +55,7 @@ export function Topbar() {
             onClick={() => void duplicateProfile()}
           >
             <Wand2 size={14} />
-            Duplizieren
+            {t('topbar.duplicate')}
           </button>
           <button
             type="button"
@@ -61,7 +63,7 @@ export function Topbar() {
             onClick={() => void deleteProfile(active.id)}
           >
             <Trash2 size={14} />
-            Löschen
+            {t('topbar.delete')}
           </button>
           <button
             type="button"
@@ -69,7 +71,7 @@ export function Topbar() {
             onClick={() => void saveActive()}
           >
             <Save size={15} />
-            Speichern
+            {t('topbar.save')}
           </button>
           <button
             type="button"
@@ -82,13 +84,13 @@ export function Topbar() {
             ) : (
               <Zap size={15} />
             )}
-            {isApplying ? 'Übertrage…' : 'An Maus senden'}
+            {isApplying ? t('topbar.applying') : t('topbar.applyToMouse')}
           </button>
         </div>
       </div>
 
       <nav className="section-tabs" role="tablist">
-        {SECTIONS.map(({ id, label, icon: Icon }) => (
+        {SECTIONS.map(({ id, icon: Icon }) => (
           <button
             key={id}
             role="tab"
@@ -98,7 +100,7 @@ export function Topbar() {
             onClick={() => setSection(id)}
           >
             <Icon size={15} />
-            {label}
+            {t(`sections.${id}`)}
           </button>
         ))}
       </nav>

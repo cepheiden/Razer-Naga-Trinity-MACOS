@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
+  AppSettings,
   ApplyResult,
   DeviceInfo,
   NagaProfile,
@@ -28,6 +29,9 @@ const api = {
   setLoginItem: (enabled: boolean) =>
     ipcRenderer.invoke('app:set-login-item', enabled) as Promise<boolean>,
   hideWindow: () => ipcRenderer.invoke('app:hide-window') as Promise<void>,
+  getSettings: () => ipcRenderer.invoke('app:get-settings') as Promise<AppSettings>,
+  updateSettings: (partial: Partial<AppSettings>) =>
+    ipcRenderer.invoke('app:update-settings', partial) as Promise<AppSettings>,
 }
 
 contextBridge.exposeInMainWorld('naga', api)

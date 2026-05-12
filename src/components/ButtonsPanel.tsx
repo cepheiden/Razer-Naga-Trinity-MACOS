@@ -1,16 +1,13 @@
+import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
-import { BUTTON_ACTIONS, MOUSE_BUTTONS } from '../lib/constants'
+import { BUTTON_ACTION_IDS, MOUSE_BUTTONS } from '../lib/constants'
 import type { ButtonActionKind, ButtonBinding } from '../../electron/types'
 
 const needsValue = (action: ButtonActionKind) =>
   action === 'key' || action === 'mouse-button' || action === 'macro'
 
-const ACTION_PLACEHOLDERS: Partial<Record<ButtonActionKind, string>> = {
-  key: 'z.B. F5, Shift+1, Strg+C',
-  'mouse-button': 'Mouse 4',
-}
-
 export function ButtonsPanel() {
+  const { t } = useTranslation()
   const profile = useActiveProfile()
   const updateActive = useNagaStore((state) => state.updateActive)
 
@@ -22,16 +19,20 @@ export function ButtonsPanel() {
 
   const baseButtons = profile.buttons.filter((button) => button.id.startsWith('base-'))
   const sideButtons = profile.buttons.filter((button) => button.id.startsWith('side-'))
+  const plateBadge =
+    profile.sidePlate === 'twelve' ? 'MMO' : profile.sidePlate === 'seven' ? 'MOBA' : 'FPS'
 
   return (
     <div className="section buttons-section">
       <div className="card buttons-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow">Standard</p>
-            <h3>Maustasten</h3>
+            <p className="eyebrow">{t('buttons.baseEyebrow')}</p>
+            <h3>{t('buttons.baseTitle')}</h3>
           </div>
-          <span className="badge muted">{baseButtons.length} Belegungen</span>
+          <span className="badge muted">
+            {baseButtons.length} {t('buttons.bindings')}
+          </span>
         </header>
         <div className="button-grid">
           {baseButtons.map((button) => (
@@ -48,10 +49,12 @@ export function ButtonsPanel() {
       <div className="card buttons-card">
         <header className="card-head">
           <div>
-            <p className="eyebrow">Seitenplatte · {profile.sidePlate.toUpperCase()}</p>
-            <h3>Side Panel ({sideButtons.length} Tasten)</h3>
+            <p className="eyebrow">
+              {t('buttons.sidePlateEyebrow')} {profile.sidePlate.toUpperCase()}
+            </p>
+            <h3>{t('buttons.sideTitle', { count: sideButtons.length })}</h3>
           </div>
-          <span className="badge muted">{profile.sidePlate === 'twelve' ? 'MMO' : profile.sidePlate === 'seven' ? 'MOBA' : 'FPS'}</span>
+          <span className="badge muted">{plateBadge}</span>
         </header>
         <div className="button-grid">
           {sideButtons.map((button) => (
@@ -75,6 +78,7 @@ interface BindingRowProps {
 }
 
 function BindingRow({ binding, macros, onChange }: BindingRowProps) {
+  const { t } = useTranslation()
   const showInput = needsValue(binding.action)
 
   return (
@@ -93,9 +97,9 @@ function BindingRow({ binding, macros, onChange }: BindingRowProps) {
           })
         }
       >
-        {BUTTON_ACTIONS.map((action) => (
-          <option key={action.value} value={action.value}>
-            {action.label}
+        {BUTTON_ACTION_IDS.map((action) => (
+          <option key={action} value={action}>
+            {t(`actions.${action}`)}
           </option>
         ))}
       </select>
@@ -106,7 +110,7 @@ function BindingRow({ binding, macros, onChange }: BindingRowProps) {
             onChange({ ...binding, macroId: event.target.value, value: event.target.value })
           }
         >
-          <option value="">— Makro wählen —</option>
+          <option value="">{t('buttons.macroPick')}</option>
           {macros.map((macro) => (
             <option key={macro.id} value={macro.id}>
               {macro.name}
@@ -127,7 +131,7 @@ function BindingRow({ binding, macros, onChange }: BindingRowProps) {
       ) : showInput ? (
         <input
           value={binding.value}
-          placeholder={ACTION_PLACEHOLDERS[binding.action]}
+          placeholder={binding.action === 'key' ? t('buttons.keyPlaceholder') : 'Mouse 4'}
           onChange={(event) => onChange({ ...binding, value: event.target.value })}
         />
       ) : (
