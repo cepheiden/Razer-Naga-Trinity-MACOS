@@ -77,7 +77,7 @@ See [`CLAUDE.md`](./CLAUDE.md) for the protocol details (Trinity-specific 2-step
 | Auto-launch + tray | n/a | ✅ login-item + menu-bar daemon |
 | Bilingual UI (DE / EN) | n/a | ✅ auto-detect + manual switch, persists across restarts; tray menu localised too |
 | RGB-off-on-lock toggle | n/a | ✅ togglable in tray menu, persists in `profiles.json` |
-| Wheel-tilt remap | unknown source action type | ⚠️ UI-only, not pushed to hardware |
+| Wheel tilt L/R (4D mouse) | persistent (EEPROM) | ✅ written on every apply: Browser ← / Browser → |
 | Profile-slot switcher | reads work, write path unverified | 🚧 planned |
 | Per-key colors / matrix RGB | unverified (OpenRazer marks as `HAS_MATRIX = False  // TODO`) | 🚧 not implemented |
 

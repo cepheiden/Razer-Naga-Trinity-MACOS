@@ -380,6 +380,42 @@ const applySideBindings = async (device: Device, hidCodes: readonly number[]) =>
   }
 }
 
+// Wheel-Tilt-Tasten (4D-Maus): Sources 0x34 (links) und 0x35 (rechts). Action-Type 0x01/0x01 (Razer-interne System-Aktion, nicht roher HID-Code). Aus Synapse-Capture: action 0x04 = Browser-Back, action 0x05 = Browser-Forward.
+const writeWheelTiltBinding = async (
+  device: Device,
+  slot: number,
+  source: number,
+  action: number,
+) => {
+  const report = createReport(0x02, 0x0c, 0x0a, TX_TRINITY_EFFECT)
+  report[8] = slot
+  report[9] = source
+  report[10] = 0x00
+  report[11] = 0x01
+  report[12] = 0x01
+  report[13] = action
+  setCrc(report)
+  await new Promise<void>((resolve, reject) => {
+    device.controlTransfer(
+      SET_REPORT_REQUEST_TYPE,
+      SET_REPORT_REQUEST,
+      SET_REPORT_VALUE,
+      0x00,
+      report,
+      (err) => (err ? reject(err) : resolve()),
+    )
+  })
+}
+
+const applyWheelTiltDefaults = async (device: Device) => {
+  for (const slot of [0x02, 0x01]) {
+    await writeWheelTiltBinding(device, slot, 0x34, 0x04)
+    await wait(20)
+    await writeWheelTiltBinding(device, slot, 0x35, 0x05)
+    await wait(20)
+  }
+}
+
 const buildSideBindings = (profile: NagaProfile): number[] => {
   const codes: number[] = []
   for (let i = 0; i < 12; i++) {
@@ -421,6 +457,7 @@ export const applyHardwareProfile = async (
     await setPollingRate(device, profile.pollingRate)
     const sideCodes = buildSideBindings(profile)
     await applySideBindings(device, sideCodes)
+    await applyWheelTiltDefaults(device)
     const macroCount = profile.buttons.filter(
       (b) => b.id.startsWith('side-') && b.action === 'macro' && b.macroId,
     ).length
@@ -429,7 +466,7 @@ export const applyHardwareProfile = async (
       : ''
     return {
       ok: true,
-      message: `RGB, DPI, Polling-Rate und Button-Bindings auf Maus geschrieben.${suffix}`,
+      message: `RGB, DPI, Polling-Rate und Button-Bindings (inkl. Wheel-Tilt = Browser ←/→) auf Maus geschrieben.${suffix}`,
       stage: 'complete',
     }
   } catch (error) {

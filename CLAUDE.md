@@ -61,7 +61,7 @@ side-1..side-12 Side panel buttons (twelve plate)
 | Polling rate | EEPROM persistent | ✅ verified |
 | **Side-Button-Bindings** | **EEPROM persistent** | **✅ verified (Wireshark-decoded from Synapse 3 traffic, 2026-05-12)** |
 | Macros (multi-step) | n/a (daemon-side) | ✅ globalShortcut-Engine fires when Naga sends F13-F24 |
-| Wheel Tilt L/R remap | configurable in UI | ❌ scroll-wheel sources (0x34/0x35) use type 01/01 — write path unknown |
+| **Wheel Tilt L/R (4D mouse)** | **EEPROM persistent** | **✅ defaults written on every apply: source 0x34 / 0x35 with action-type 01/01, payload 0x04 (Browser Back) / 0x05 (Browser Forward). User-verified.** |
 
 ## Side-button binding write protocol (Wireshark-decoded)
 
