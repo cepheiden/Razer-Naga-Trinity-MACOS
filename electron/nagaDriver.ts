@@ -144,7 +144,8 @@ const sendReport = async (device: Device, report: Buffer): Promise<void> => {
 const openDevice = (): Device => {
   const device = findByIds(RAZER_VENDOR_ID, NAGA_TRINITY_PRODUCT_ID)
   if (!device) {
-    throw new Error('Razer Naga Trinity wurde nicht gefunden.')
+    // Englischer Default-Text; der Renderer mappt das Pattern auf den i18n-Key 'driverNotices.notFound' falls vorhanden.
+    throw new Error('Razer Naga Trinity not found.')
   }
   device.open()
   return device
@@ -461,18 +462,22 @@ export const applyHardwareProfile = async (
     const macroCount = profile.buttons.filter(
       (b) => b.id.startsWith('side-') && b.action === 'macro' && b.macroId,
     ).length
-    const suffix = macroCount > 0
-      ? ` ${macroCount} Side-Button${macroCount > 1 ? 's' : ''} auf F13–F24 für Makros gemappt.`
-      : ''
     return {
       ok: true,
-      message: `RGB, DPI, Polling-Rate und Button-Bindings (inkl. Wheel-Tilt = Browser ←/→) auf Maus geschrieben.${suffix}`,
+      message:
+        macroCount > 0
+          ? `RGB, DPI, Polling-Rate und Button-Bindings auf Maus geschrieben. ${macroCount} Side-Buttons auf F13–F24 für Makros gemappt.`
+          : 'RGB, DPI, Polling-Rate und Button-Bindings auf Maus geschrieben.',
+      key: macroCount > 0 ? 'driverNotices.applyCompleteWithMacros' : 'driverNotices.applyComplete',
+      params: { macroCount },
       stage: 'complete',
     }
   } catch (error) {
     return {
       ok: false,
       message: error instanceof Error ? error.message : 'Unbekannter USB-Fehler.',
+      key: 'driverNotices.usbError',
+      params: { detail: error instanceof Error ? error.message : '' },
     }
   } finally {
     if (device) closeDevice(device)
@@ -484,11 +489,13 @@ export const setRgbOff = async (): Promise<ApplyResult> => {
   try {
     device = openDevice()
     await setGlobalBrightness(device, 0)
-    return { ok: true, message: 'RGB ausgeschaltet.' }
+    return { ok: true, message: 'RGB ausgeschaltet.', key: 'driverNotices.rgbOff' }
   } catch (error) {
     return {
       ok: false,
       message: error instanceof Error ? error.message : 'Unbekannter USB-Fehler.',
+      key: 'driverNotices.usbError',
+      params: { detail: error instanceof Error ? error.message : '' },
     }
   } finally {
     if (device) closeDevice(device)
@@ -500,11 +507,13 @@ export const applyRgbOnly = async (rgb: RgbSettings): Promise<ApplyResult> => {
   try {
     device = openDevice()
     await applyRgb(device, rgb)
-    return { ok: true, message: 'RGB aktualisiert.', stage: 'rgb' }
+    return { ok: true, message: 'RGB aktualisiert.', key: 'driverNotices.rgbUpdated', stage: 'rgb' }
   } catch (error) {
     return {
       ok: false,
       message: error instanceof Error ? error.message : 'Unbekannter USB-Fehler.',
+      key: 'driverNotices.usbError',
+      params: { detail: error instanceof Error ? error.message : '' },
     }
   } finally {
     if (device) closeDevice(device)

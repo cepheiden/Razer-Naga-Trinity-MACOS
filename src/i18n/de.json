@@ -37,6 +37,14 @@
     "profileSaved": "Profil gespeichert.",
     "bridgeUnavailable": "Electron-Bridge nicht verfügbar (Browser-Modus)."
   },
+  "driverNotices": {
+    "applyComplete": "RGB, DPI, Polling-Rate und Button-Bindings auf Maus geschrieben.",
+    "applyCompleteWithMacros": "RGB, DPI, Polling-Rate und Button-Bindings auf Maus geschrieben. {{macroCount}} Side-Buttons auf F13–F24 für Makros gemappt.",
+    "rgbOff": "RGB ausgeschaltet.",
+    "rgbUpdated": "RGB aktualisiert.",
+    "usbError": "USB-Fehler: {{detail}}",
+    "notFound": "Razer Naga Trinity wurde nicht gefunden."
+  },
   "trademark": {
     "short": "Razer® und Naga® sind Marken der Razer Inc.",
     "disclaimer": "Inoffiziell · nicht assoziiert mit Razer"
@@ -115,7 +123,18 @@
     "sidePlateEyebrow": "Seitenplatte ·",
     "sideTitle": "Side Panel ({{count}} Tasten)",
     "macroPick": "— Makro wählen —",
-    "keyPlaceholder": "z.B. F5, Shift+1, Strg+C"
+    "keyPlaceholder": "z.B. F5, Shift+1, Strg+C",
+    "labels": {
+      "base-1": "Linksklick",
+      "base-2": "Rechtsklick",
+      "base-3": "Mausrad-Klick",
+      "base-4": "Mausrad hoch",
+      "base-5": "Mausrad runter",
+      "base-6": "Rad nach links",
+      "base-7": "Rad nach rechts",
+      "base-8": "DPI hoch",
+      "base-9": "DPI runter"
+    }
   },
   "actions": {
     "default": "Standard",

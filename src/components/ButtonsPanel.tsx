@@ -78,14 +78,17 @@ interface BindingRowProps {
 }
 
 function BindingRow({ binding, macros, onChange }: BindingRowProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const showInput = needsValue(binding.action)
+  // Base-Button-Labels über i18n auflösen; gespeicherter Label dient als Fallback (z.B. für custom Side-Button-Namen).
+  const labelKey = `buttons.labels.${binding.id}`
+  const displayLabel = i18n.exists(labelKey) ? (t(labelKey) as string) : binding.label
 
   return (
     <div className="binding-row">
       <div className="binding-label">
         <span className="binding-index">#{binding.hardwareIndex}</span>
-        <strong>{binding.label}</strong>
+        <strong>{displayLabel}</strong>
       </div>
       <select
         value={binding.action}
