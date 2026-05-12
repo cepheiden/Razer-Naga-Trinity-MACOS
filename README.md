@@ -1,5 +1,7 @@
 # Razer Naga Trinity – macOS Controller
 
+![Naga Trinity Control – Lighting panel](docs/screenshot-lighting.png)
+
 Electron + React app for the **Razer Naga Trinity (VID `0x1532`, PID `0x0067`)** on macOS. Replaces Razer Synapse for the things macOS users actually need:
 
 - RGB (scroll wheel + logo, with multiple effects)
