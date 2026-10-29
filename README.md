@@ -7,7 +7,7 @@ Electron + React app for the **Razer Naga Trinity (VID `0x1532`, PID `0x0067`)**
 - RGB (scroll wheel + logo, with multiple effects)
 - DPI stages and active-stage cycling
 - Polling rate (125 / 500 / 1000 Hz)
-- Side-panel button remapping, persisted in EEPROM
+- Side-panel button remapping (key, key combo like `Shift+1`, Mouse 1-5, or macro) for the 12- and 7-button plates, persisted in EEPROM
 - Multi-step macros (text auto-type) triggered from side buttons
 - Optional RGB-off when the screen locks / sleeps (toggleable in the tray menu); auto-restore on unlock/wake
 - Auto-launch at login, lives in the menu bar (tray-mode daemon)
@@ -57,6 +57,8 @@ For a signed/notarised release for distribution, configure `electron-builder` in
 - **`cannot open device with path DevSrvsID:...`** – legacy `node-hid` error. Should not happen with this codebase (we use `usb` / libusb on endpoint 0). If you see it, another instance of Electron is already running.
 - **Macro fires but nothing types** – Accessibility permission missing for Electron. Re-grant and restart.
 - **Side buttons still send numbers 1-9 after configuring a macro** – click "An Maus senden" once; the hardware-binding only writes when you explicitly apply.
+- **Apply fails with `"10" can't be written to the mouse`** – profiles created before the side-button fix stored `10` / `11` / `12` as the default values for side buttons 10-12. Change them to `0` / `-` / `=` (or *Default*) and apply again. Side buttons accept a key (`F5`, `h`, `Shift+1`), Mouse 1-5, a macro, or *Default*; anything else is rejected before any USB write.
+- **Side buttons on the 2-button plate don't change** – expected for now. Its source IDs haven't been scanned yet, so the app doesn't write side bindings for that plate.
 - **Lights stay off after USB replug** – expected. Razer firmware can persist DPI and bindings but **not** RGB (per Razer's own design; even Synapse can't). The app re-applies RGB automatically on startup; just have it auto-launch.
 
 ## How it works
@@ -64,6 +66,8 @@ For a signed/notarised release for distribution, configure `electron-builder` in
 The driver talks to the device via `libusb` control transfers on endpoint 0 — bypasses `IOHIDFamily` and the macOS *Input Monitoring* permission that would normally block access to the Razer vendor HID interface (which macOS exposes as a keyboard usage).
 
 Side-button macros work by **remapping the physical buttons to F13–F24** on the mouse hardware (`SET_REPORT` to `cls 0x02 cmd 0x0c`, two-step write to profile slots 2 + 1 per Synapse's pattern), then catching those F-keys in the app via Electron's `globalShortcut` and replaying user-defined text via `osascript`. F13–F24 are unused on macOS so this doesn't conflict with normal typing.
+
+Each side plate has its own source IDs (12-button `0x40`–`0x4b`, 7-button `0x50`–`0x56`). Every binding write is read back via `cls 0x02 cmd 0x8c` and retried with backoff, because the firmware silently drops some writes while still answering OK. All USB access runs through a single queue so that two operations (e.g. the RGB preview at window start and an apply) never share the device at the same time.
 
 See [`CLAUDE.md`](./CLAUDE.md) for the protocol details (Trinity-specific 2-step static effect, transaction IDs per command class, button-binding write format, Wireshark capture findings).
 
@@ -74,7 +78,8 @@ See [`CLAUDE.md`](./CLAUDE.md) for the protocol details (Trinity-specific 2-step
 | RGB (scroll + logo) | volatile while powered | ✅ applied on profile send + auto-restored on unlock/wake |
 | DPI stages | persistent (EEPROM) | ✅ set + verified via round-trip read |
 | Polling rate | persistent (EEPROM) | ✅ set + verified |
-| Side-button bindings | persistent (EEPROM) | ✅ writable, Wireshark-decoded |
+| Side-button bindings (12- and 7-button plate) | persistent (EEPROM) | ✅ key / key combo / Mouse 1-5 / macro, read back after every write |
+| Side-button bindings (2-button plate) | persistent (EEPROM) | 🚧 source IDs not scanned yet, no writes |
 | Macros (text auto-type) | uses F13-F24 trick | ✅ `globalShortcut` + `osascript` |
 | Auto-launch + tray | n/a | ✅ login-item + menu-bar daemon |
 | Bilingual UI (DE / EN) | n/a | ✅ auto-detect + manual switch, persists across restarts; tray menu localised too |
@@ -90,6 +95,10 @@ Electron 42, React 19, Vite 8, TypeScript 6, `usb` (libusb N-API), Zustand, `i18
 ## Sources and credits
 
 This project would not have been possible without the following.
+
+### Contributors
+
+- **[Ole Christian Rynning (@oc)](https://github.com/oc)** – [PR #1](https://github.com/cepheiden/Razer-Naga-Trinity-MACOS/pull/1): found the 7-button plate's source IDs by scanning the bindings with `cmd 0x8c`, made key / key-combo / Mouse 1-5 side-button bindings actually reach the mouse, serialized all USB access and added read-back + retry for binding writes. Verified on hardware.
 
 ### Reverse-engineering reference
 
