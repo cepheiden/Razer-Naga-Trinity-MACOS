@@ -1,12 +1,14 @@
 import { findByIds, type Device } from 'usb'
 import type {
   ApplyResult,
+  ButtonBinding,
   DeviceInfo,
   DpiSettings,
   LedZone,
   NagaProfile,
   PollingRate,
   RgbSettings,
+  SidePlate,
 } from './types'
 
 const RAZER_VENDOR_ID = 0x1532
@@ -18,6 +20,9 @@ const SET_REPORT_REQUEST_TYPE = 0x21
 const SET_REPORT_REQUEST = 0x09
 // wValue: (report type Feature = 0x03) << 8 | report ID 0x00.
 const SET_REPORT_VALUE = 0x0300
+// HID class request GET_REPORT: device-to-host, class, interface recipient.
+const GET_REPORT_REQUEST_TYPE = 0xa1
+const GET_REPORT_REQUEST = 0x01
 
 const LED_CLASS = 0x0f
 const DPI_CLASS = 0x04
@@ -157,6 +162,22 @@ const closeDevice = (device: Device) => {
   } catch {
     // Schon geschlossen oder Transfer noch im Flug – ignorieren.
   }
+}
+
+// USB-Zugriffe strikt nacheinander: findByIds liefert dasselbe Device-Objekt, ein paralleles close() (z.B. RGB-Preview beim Fensterstart) bricht sonst einen laufenden Apply mit "Device is not open" ab.
+let deviceQueue: Promise<unknown> = Promise.resolve()
+
+const withDevice = <T>(task: (device: Device) => Promise<T>): Promise<T> => {
+  const run = deviceQueue.then(async () => {
+    const device = openDevice()
+    try {
+      return await task(device)
+    } finally {
+      closeDevice(device)
+    }
+  })
+  deviceQueue = run.catch(() => undefined)
+  return run
 }
 
 // Brightness ist auf der Naga Trinity global (LED 0x00 = ZERO_LED), tx_id 0x3f (OpenRazer-Quelle).
@@ -334,100 +355,201 @@ const setPollingRate = async (device: Device, rate: PollingRate) => {
   await sendReport(device, report)
 }
 
-// Side-Buttons 1..12 haben Razer-interne Source-IDs 0x40..0x4b. F13..F24 sind die HID-Codes, die wir Makro-Buttons zuweisen – sicher abfangbar via globalShortcut ohne Tipperei-Konflikt.
-const RAZER_SIDE_BUTTON_SOURCE_OFFSET = 0x40
+// Button-Action aus dem Synapse-Capture (cls 0x02 cmd 0x0c size 0x0a, wIndex=0): args = [slot, source, 0x00, type, paramLen, ...params]. type 0x01 = Maustaste (1 Param), type 0x02 = Taste (2 Params: HID-Modifier-Bitmaske, HID-Code).
+interface ButtonAction {
+  type: number
+  params: readonly number[]
+}
+
+interface SourceBinding {
+  source: number
+  action: ButtonAction
+}
+
+const keyAction = (hidCode: number, modifiers = 0): ButtonAction => ({
+  type: 0x02,
+  params: [modifiers, hidCode],
+})
+
+const mouseAction = (button: number): ButtonAction => ({ type: 0x01, params: [button] })
+
+// Jede Seitenplatte hat eigene Source-IDs: 12er 0x40..0x4b (Synapse-Capture), 7er 0x50..0x56 (Binding-Scan via cmd 0x8c, Factory-Default 1..7). 2er-Platte noch nicht gescannt – bekommt keine Writes. F13..F24 sind die HID-Codes, die wir Makro-Buttons zuweisen – sicher abfangbar via globalShortcut ohne Tipperei-Konflikt.
+const SIDE_PLATE_SOURCES: Record<SidePlate, readonly number[]> = {
+  twelve: Array.from({ length: 12 }, (_, index) => 0x40 + index),
+  seven: Array.from({ length: 7 }, (_, index) => 0x50 + index),
+  two: [],
+}
 const RAZER_DEFAULT_SIDE_HID: readonly number[] = [
   0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x2d, 0x2e,
 ]
-export const SIDE_BUTTON_MACRO_HID: readonly number[] = [
+const SIDE_BUTTON_MACRO_HID: readonly number[] = [
   0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70, 0x71, 0x72, 0x73,
 ]
 
-// Schreibt ein einzelnes Side-Button-Binding ins EEPROM. Aus Wireshark-Capture: cls 0x02 cmd 0x0c size 0x0a, wIndex=0, args = [slot, 0x40+(idx-1), 0, 0x02, 0x02, 0, hidCode, 0, 0, 0].
-const writeSideButtonBinding = async (
-  device: Device,
-  slot: number,
-  buttonIndex: number,
-  hidCode: number,
-) => {
-  const report = createReport(0x02, 0x0c, 0x0a, TX_TRINITY_EFFECT)
-  report[8] = slot
-  report[9] = RAZER_SIDE_BUTTON_SOURCE_OFFSET + (buttonIndex - 1)
-  report[10] = 0x00
-  report[11] = 0x02
-  report[12] = 0x02
-  report[13] = 0x00
-  report[14] = hidCode
-  setCrc(report)
-  await new Promise<void>((resolve, reject) => {
+// Wheel-Tilt-Tasten (4D-Maus): Sources 0x34 (links) und 0x35 (rechts). Aus Synapse-Capture: Maustaste 4 = Browser-Back, Maustaste 5 = Browser-Forward.
+const WHEEL_TILT_BINDINGS: readonly SourceBinding[] = [
+  { source: 0x34, action: mouseAction(0x04) },
+  { source: 0x35, action: mouseAction(0x05) },
+]
+
+// HID Keyboard Page (0x07), US-Layout-Positionen.
+const HID_KEY_CODES = new Map<string, number>([
+  ...[...'abcdefghijklmnopqrstuvwxyz'].map((key, index): [string, number] => [key, 0x04 + index]),
+  ...[...'1234567890'].map((key, index): [string, number] => [key, 0x1e + index]),
+  ...Array.from({ length: 12 }, (_, index): [string, number] => [`f${index + 1}`, 0x3a + index]),
+  ...Array.from({ length: 12 }, (_, index): [string, number] => [`f${index + 13}`, 0x68 + index]),
+  ['enter', 0x28], ['return', 0x28], ['esc', 0x29], ['escape', 0x29],
+  ['backspace', 0x2a], ['tab', 0x2b], ['space', 0x2c],
+  ['-', 0x2d], ['=', 0x2e], ['[', 0x2f], [']', 0x30], ['\\', 0x31],
+  [';', 0x33], ["'", 0x34], ['`', 0x35], [',', 0x36], ['.', 0x37], ['/', 0x38],
+  ['printscreen', 0x46], ['scrolllock', 0x47], ['pause', 0x48], ['insert', 0x49],
+  ['home', 0x4a], ['pageup', 0x4b], ['delete', 0x4c], ['end', 0x4d], ['pagedown', 0x4e],
+  ['arrowright', 0x4f], ['arrowleft', 0x50], ['arrowdown', 0x51], ['arrowup', 0x52],
+])
+
+const HID_MODIFIER_BITS = new Map<string, number>([
+  ['ctrl', 0x01], ['strg', 0x01],
+  ['shift', 0x02],
+  ['alt', 0x04], ['opt', 0x04], ['option', 0x04],
+  ['cmd', 0x08], ['command', 0x08],
+])
+
+const MOUSE_BUTTON_IDS = new Map<string, number>([
+  ['Mouse 1', 0x01], ['Mouse 2', 0x02], ['Mouse 3', 0x03], ['Mouse 4', 0x04], ['Mouse 5', 0x05],
+])
+
+export class UnsupportedBindingError extends Error {
+  constructor(
+    readonly button: string,
+    readonly value: string,
+  ) {
+    super(`${button}: "${value}" kann nicht auf die Maus geschrieben werden.`)
+    this.name = 'UnsupportedBindingError'
+  }
+}
+
+// "F5", "Shift+1", "Ctrl+C" → Key-Action. undefined bei unbekannter Taste oder unbekanntem Modifier.
+const parseKeyCombo = (value: string): ButtonAction | undefined => {
+  const [keyName = '', ...modifierNames] = value
+    .toLowerCase()
+    .split('+')
+    .map((part) => part.trim())
+    .reverse()
+  const hidCode = HID_KEY_CODES.get(keyName)
+  const modifierBits = modifierNames.map((name) => HID_MODIFIER_BITS.get(name))
+  if (hidCode === undefined || modifierBits.some((bit) => bit === undefined)) return undefined
+  return keyAction(
+    hidCode,
+    modifierBits.reduce<number>((mask, bit) => mask | (bit ?? 0), 0),
+  )
+}
+
+const resolveSideAction = (binding: ButtonBinding | undefined, index: number): ButtonAction => {
+  if (!binding || binding.action === 'default') return keyAction(RAZER_DEFAULT_SIDE_HID[index])
+  if (binding.action === 'macro') {
+    return keyAction(binding.macroId ? SIDE_BUTTON_MACRO_HID[index] : RAZER_DEFAULT_SIDE_HID[index])
+  }
+  if (binding.action === 'key') {
+    const action = parseKeyCombo(binding.value)
+    if (action) return action
+    throw new UnsupportedBindingError(binding.label, binding.value)
+  }
+  if (binding.action === 'mouse-button') {
+    const button = MOUSE_BUTTON_IDS.get(binding.value)
+    if (button !== undefined) return mouseAction(button)
+    throw new UnsupportedBindingError(binding.label, binding.value)
+  }
+  throw new UnsupportedBindingError(binding.label, binding.action)
+}
+
+const buildSideBindings = (profile: NagaProfile): SourceBinding[] =>
+  SIDE_PLATE_SOURCES[profile.sidePlate].map((source, index) => ({
+    source,
+    action: resolveSideAction(
+      profile.buttons.find((button) => button.id === `side-${index + 1}`),
+      index,
+    ),
+  }))
+
+// Button-Mapping-Reports gehen wie im Synapse-Capture an wIndex 0x00.
+const BINDING_INTERFACE = 0x00
+const BINDING_WRITE_ATTEMPTS = 5
+const RAZER_STATUS_OK = 0x02
+
+const setBindingReport = (device: Device, report: Buffer) =>
+  new Promise<void>((resolve, reject) => {
     device.controlTransfer(
       SET_REPORT_REQUEST_TYPE,
       SET_REPORT_REQUEST,
       SET_REPORT_VALUE,
-      0x00,
+      BINDING_INTERFACE,
       report,
       (err) => (err ? reject(err) : resolve()),
     )
   })
+
+const getBindingReport = (device: Device) =>
+  new Promise<Buffer>((resolve, reject) => {
+    device.controlTransfer(
+      GET_REPORT_REQUEST_TYPE,
+      GET_REPORT_REQUEST,
+      SET_REPORT_VALUE,
+      BINDING_INTERFACE,
+      RAZER_REPORT_LEN,
+      (err, data) =>
+        err || !Buffer.isBuffer(data)
+          ? reject(err ?? new Error('Leere USB-Antwort.'))
+          : resolve(data),
+    )
+  })
+
+// Lesen: cmd 0x8c, args [slot, source] → Antwort-Args [slot, source, 0x00, type, paramLen, ...params].
+const readButtonBinding = async (device: Device, slot: number, source: number) => {
+  const request = createReport(0x02, 0x8c, 0x0a, TX_TRINITY_EFFECT)
+  request[8] = slot
+  request[9] = source
+  setCrc(request)
+  await setBindingReport(device, request)
+  await wait(20)
+  return getBindingReport(device)
 }
 
-// Synapse-Pattern: erst Slot 2 (pending), dann Slot 1 (commit/active). Beide identisch beschreiben.
-const applySideBindings = async (device: Device, hidCodes: readonly number[]) => {
-  for (const slot of [0x02, 0x01]) {
-    for (let i = 0; i < Math.min(12, hidCodes.length); i++) {
-      await writeSideButtonBinding(device, slot, i + 1, hidCodes[i])
-      await wait(20)
-    }
-  }
-}
+const isBindingStored = (reply: Buffer, { source, action }: SourceBinding) =>
+  reply[0] === RAZER_STATUS_OK &&
+  reply[9] === source &&
+  reply[11] === action.type &&
+  reply[12] === action.params.length &&
+  action.params.every((param, index) => reply[13 + index] === param)
 
-// Wheel-Tilt-Tasten (4D-Maus): Sources 0x34 (links) und 0x35 (rechts). Action-Type 0x01/0x01 (Razer-interne System-Aktion, nicht roher HID-Code). Aus Synapse-Capture: action 0x04 = Browser-Back, action 0x05 = Browser-Forward.
-const writeWheelTiltBinding = async (
-  device: Device,
-  slot: number,
-  source: number,
-  action: number,
-) => {
+// FW verwirft einzelne Writes stillschweigend (z.B. den ersten nach DPI/Polling oder parallel laufende RGB-Previews) – deshalb zurücklesen und mit Backoff wiederholen.
+const writeButtonBinding = async (device: Device, slot: number, binding: SourceBinding) => {
   const report = createReport(0x02, 0x0c, 0x0a, TX_TRINITY_EFFECT)
   report[8] = slot
-  report[9] = source
+  report[9] = binding.source
   report[10] = 0x00
-  report[11] = 0x01
-  report[12] = 0x01
-  report[13] = action
+  report[11] = binding.action.type
+  report[12] = binding.action.params.length
+  report.set(binding.action.params, 13)
   setCrc(report)
-  await new Promise<void>((resolve, reject) => {
-    device.controlTransfer(
-      SET_REPORT_REQUEST_TYPE,
-      SET_REPORT_REQUEST,
-      SET_REPORT_VALUE,
-      0x00,
-      report,
-      (err) => (err ? reject(err) : resolve()),
-    )
-  })
-}
 
-const applyWheelTiltDefaults = async (device: Device) => {
-  for (const slot of [0x02, 0x01]) {
-    await writeWheelTiltBinding(device, slot, 0x34, 0x04)
-    await wait(20)
-    await writeWheelTiltBinding(device, slot, 0x35, 0x05)
-    await wait(20)
+  for (let attempt = 0; attempt < BINDING_WRITE_ATTEMPTS; attempt++) {
+    await setBindingReport(device, report)
+    await wait(20 * 2 ** attempt)
+    if (isBindingStored(await readButtonBinding(device, slot, binding.source), binding)) return
+    console.log(`[naga] binding source 0x${binding.source.toString(16)} slot ${slot} not stored, retry ${attempt + 1}`)
   }
+  throw new Error(
+    `Button-Binding Source 0x${binding.source.toString(16)} (Slot ${slot}) wurde von der Maus nicht übernommen.`,
+  )
 }
 
-const buildSideBindings = (profile: NagaProfile): number[] => {
-  const codes: number[] = []
-  for (let i = 0; i < 12; i++) {
-    const binding = profile.buttons.find((b) => b.id === `side-${i + 1}`)
-    if (binding?.action === 'macro' && binding.macroId) {
-      codes.push(SIDE_BUTTON_MACRO_HID[i])
-    } else {
-      codes.push(RAZER_DEFAULT_SIDE_HID[i])
+// Synapse-Pattern: erst Slot 2 (pending), dann Slot 1 (commit/active).
+const applyButtonBindings = async (device: Device, bindings: readonly SourceBinding[]) => {
+  for (const slot of [0x02, 0x01]) {
+    for (const binding of bindings) {
+      await writeButtonBinding(device, slot, binding)
     }
   }
-  return codes
 }
 
 export const listNagaDevices = (): DeviceInfo => {
@@ -449,16 +571,15 @@ export const listNagaDevices = (): DeviceInfo => {
 export const applyHardwareProfile = async (
   profile: NagaProfile,
 ): Promise<ApplyResult> => {
-  let device: Device | undefined
-
   try {
-    device = openDevice()
-    await applyRgb(device, profile.rgb)
-    await setDpiStages(device, profile.dpi)
-    await setPollingRate(device, profile.pollingRate)
-    const sideCodes = buildSideBindings(profile)
-    await applySideBindings(device, sideCodes)
-    await applyWheelTiltDefaults(device)
+    const sideBindings = buildSideBindings(profile)
+    await withDevice(async (device) => {
+      await applyRgb(device, profile.rgb)
+      await setDpiStages(device, profile.dpi)
+      await setPollingRate(device, profile.pollingRate)
+      await applyButtonBindings(device, sideBindings)
+      await applyButtonBindings(device, WHEEL_TILT_BINDINGS)
+    })
     const macroCount = profile.buttons.filter(
       (b) => b.id.startsWith('side-') && b.action === 'macro' && b.macroId,
     ).length
@@ -473,22 +594,26 @@ export const applyHardwareProfile = async (
       stage: 'complete',
     }
   } catch (error) {
+    if (error instanceof UnsupportedBindingError) {
+      return {
+        ok: false,
+        message: error.message,
+        key: 'driverNotices.unsupportedBinding',
+        params: { button: error.button, value: error.value },
+      }
+    }
     return {
       ok: false,
       message: error instanceof Error ? error.message : 'Unbekannter USB-Fehler.',
       key: 'driverNotices.usbError',
       params: { detail: error instanceof Error ? error.message : '' },
     }
-  } finally {
-    if (device) closeDevice(device)
   }
 }
 
 export const setRgbOff = async (): Promise<ApplyResult> => {
-  let device: Device | undefined
   try {
-    device = openDevice()
-    await setGlobalBrightness(device, 0)
+    await withDevice((device) => setGlobalBrightness(device, 0))
     return { ok: true, message: 'RGB ausgeschaltet.', key: 'driverNotices.rgbOff' }
   } catch (error) {
     return {
@@ -497,16 +622,12 @@ export const setRgbOff = async (): Promise<ApplyResult> => {
       key: 'driverNotices.usbError',
       params: { detail: error instanceof Error ? error.message : '' },
     }
-  } finally {
-    if (device) closeDevice(device)
   }
 }
 
 export const applyRgbOnly = async (rgb: RgbSettings): Promise<ApplyResult> => {
-  let device: Device | undefined
   try {
-    device = openDevice()
-    await applyRgb(device, rgb)
+    await withDevice((device) => applyRgb(device, rgb))
     return { ok: true, message: 'RGB aktualisiert.', key: 'driverNotices.rgbUpdated', stage: 'rgb' }
   } catch (error) {
     return {
@@ -515,7 +636,5 @@ export const applyRgbOnly = async (rgb: RgbSettings): Promise<ApplyResult> => {
       key: 'driverNotices.usbError',
       params: { detail: error instanceof Error ? error.message : '' },
     }
-  } finally {
-    if (device) closeDevice(device)
   }
 }

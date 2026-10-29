@@ -43,6 +43,7 @@
     "rgbOff": "RGB turned off.",
     "rgbUpdated": "RGB updated.",
     "usbError": "USB error: {{detail}}",
+    "unsupportedBinding": "{{button}}: \"{{value}}\" can't be written to the mouse. Side buttons support a key (e.g. F5, Shift+1), Mouse 1-5, or a macro.",
     "notFound": "Razer Naga Trinity not found."
   },
   "trademark": {

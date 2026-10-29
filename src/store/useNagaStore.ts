@@ -53,6 +53,8 @@ const SIDE_PLATE_LABELS: Record<SidePlate, string[]> = {
   twelve: Array.from({ length: 12 }, (_, index) => `Numpad ${index + 1}`),
 }
 
+const SIDE_DEFAULT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=']
+
 const baseBindings = (): NagaProfile['buttons'] => [
   { id: 'base-1', label: 'Left Click', hardwareIndex: 1, action: 'default', value: 'Mouse 1' },
   { id: 'base-2', label: 'Right Click', hardwareIndex: 2, action: 'default', value: 'Mouse 2' },
@@ -71,7 +73,7 @@ const buildButtons = (plate: SidePlate): NagaProfile['buttons'] => {
     label,
     hardwareIndex: 10 + index,
     action: 'key' as const,
-    value: plate === 'twelve' ? `${index + 1}` : `F${index + 1}`,
+    value: SIDE_DEFAULT_KEYS[index],
   }))
   return [...baseBindings(), ...side]
 }
