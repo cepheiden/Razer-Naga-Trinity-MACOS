@@ -76,22 +76,33 @@ Razer report:
   byte[6] = 0x02 (cls = button mapping)
   byte[7] = 0x0c (cmd = set binding)
   byte[8] = slot (1-4; profile slot)
-  byte[9] = 0x40 + (button_index - 1)  // source ID for side buttons 1-12
+  byte[9] = source ID (see table below; side buttons depend on the attached plate)
   byte[10] = 0x00
-  byte[11] = 0x02  // action major: key
-  byte[12] = 0x02  // action minor: key
-  byte[13] = 0x00
-  byte[14] = HID keycode (target key the button should send)
+  byte[11] = action type: 0x02 key, 0x01 mouse button
+  byte[12] = param length: 0x02 key, 0x01 mouse button
+  byte[13] = key: HID modifier bitmask (Ctrl 0x01, Shift 0x02, Alt 0x04, Cmd 0x08 - non-zero untested on HW)
+             mouse: button 0x01-0x05 (0x04/0x05 = Mouse 4/5 = Browser Back/Forward)
+  byte[14] = key: HID keycode (target key the button should send)
   byte[15-87] = 0x00 (padding)
   byte[88] = CRC (XOR of bytes 2-87)
   byte[89] = 0x00
 ```
 
-**Crucial Synapse pattern**: each binding is written **TWICE — first to slot 2, then to slot 1**. Writing only to slot 1 returns `status=OK` but is silently dropped — the FW only commits when both writes happen in that order. Implemented in `nagaDriver.ts` `applySideBindings`.
+**Crucial Synapse pattern**: each binding is written **TWICE — first to slot 2, then to slot 1**. Writing only to slot 1 returns `status=OK` but is silently dropped — the FW only commits when both writes happen in that order. Implemented in `nagaDriver.ts` `applyButtonBindings`.
 
-Other source IDs observed in capture (not implemented):
-- 0x34, 0x35 — scroll wheel tilt/wheel; use action type 01/01 (system action, not keystroke)
-- 0x40-0x4b — the 12 side panel buttons; use action type 02/02 (keystroke)
+**Reading bindings works**: `cls 0x02 cmd 0x8c size 0x0a`, args `[slot, source]` → reply args `[slot, source, 0x00, type, ...params]`. Full source scan of slot 1 (2026-10-29, factory state unless noted):
+
+| Source | Factory binding | Meaning |
+|---|---|---|
+| 0x01-0x05 | mouse 01-05 | LMB, RMB, MMB, Mouse 4/5 (Mouse 4/5 probably = 2-button plate, unverified) |
+| 0x09, 0x0a | mouse 09, 0a | scroll up / down |
+| 0x0b, 0x0c | type 06, 01/02 | DPI + / DPI - |
+| 0x0e | type 07, 01 | unknown (profile cycle?) |
+| 0x34, 0x35 | mouse 04/05 (our write) | wheel tilt L/R |
+| 0x40-0x4b | key 1..= | **12-button plate** |
+| 0x50-0x56 | key 1..7 (`02 01 00 <hid>`) | **7-button plate**, physical order 1-7 |
+
+The 12- and 7-button plates share factory defaults (1..7), so seeing the right characters in an event viewer does NOT prove which source IDs a plate uses - read the bindings back instead.
 
 **Default Razer side-button HID codes** (what the mouse sends out-of-the-box):
 - Buttons 1-9: HID 0x1e-0x26 (`1`-`9`)
@@ -99,7 +110,7 @@ Other source IDs observed in capture (not implemented):
 - Button 11: HID 0x2d (`-`)
 - Button 12: HID 0x2e (`=`)
 
-**Our app's macro-mode mapping**: When a side button has `action='macro'`, `applyHardwareProfile` writes that button to F13-F24 (HID 0x68-0x73) instead of its default. The macroEngine then registers `globalShortcut` for the corresponding F-key. This avoids globalShortcut hijacking common typing keys.
+**Our app's macro-mode mapping**: When a side button has `action='macro'`, `applyHardwareProfile` writes that button to F13-F24 (HID 0x68-0x73) instead of its default. `key` (e.g. `F5`, `Shift+1`) and `mouse-button` (Mouse 1-5) are written as configured, `default` writes the Razer default `1`-`=`, any other action fails Apply with `driverNotices.unsupportedBinding` before touching USB. The macroEngine then registers `globalShortcut` for the corresponding F-key. This avoids globalShortcut hijacking common typing keys.
 
 | Side button | Macro-mode HID | globalShortcut |
 |---|---|---|
@@ -111,7 +122,7 @@ Other source IDs observed in capture (not implemented):
 ## Open work / next steps
 
 - ✅ **Tray + Auto-Launch + Auto-Apply** done (2026-05-12). App registers as login item via `app.setLoginItemSettings`, lives in menu bar via `Tray`, hides window on close, re-applies active profile on startup, RGB off on lock/sleep + restore on unlock/wake.
-- ✅ **Variante A + Side-Button-Writes** done (2026-05-12 evening) — `nagaDriver.ts` `applySideBindings` writes the EEPROM bindings during `applyHardwareProfile`. Side buttons with `action='macro'` get F13-F24, others get the Razer default 1-12 keys. `macroEngine.ts` registers globalShortcut for F13-F24 matching the macro-mode buttons. End-to-end: user configures macro in UI → "Apply" → mouse hardware-binding rewritten + globalShortcut registered → user presses physical side button → mouse sends F-key → globalShortcut fires → osascript types the macro text. No conflict with normal typing because F13-F24 are unused on macOS.
+- ✅ **Variante A + Side-Button-Writes** done (2026-05-12 evening) — `nagaDriver.ts` `applyButtonBindings` writes the EEPROM bindings during `applyHardwareProfile`. Side buttons with `action='macro'` get F13-F24, others get the Razer default 1-12 keys. `macroEngine.ts` registers globalShortcut for F13-F24 matching the macro-mode buttons. End-to-end: user configures macro in UI → "Apply" → mouse hardware-binding rewritten + globalShortcut registered → user presses physical side button → mouse sends F-key → globalShortcut fires → osascript types the macro text. No conflict with normal typing because F13-F24 are unused on macOS.
 - ✅ **Bilingual UI (DE / EN)** done (2026-05-12 night) — `src/i18n/` with `i18next` + `react-i18next` + browser language detector. Auto-detects from `navigator.language`, manual switch in sidebar footer (`.lang-button` DE / EN), persisted in `localStorage` key `naga:lang`. Renderer also writes the choice back via `app:update-settings` → main process re-caches `cachedLang` and rebuilds the tray menu in place. Main has its own small `TRAY_STRINGS` table (DE/EN) since the tray is built before the renderer loads.
 - ✅ **RGB-off-on-lock toggle** done (2026-05-12 night) — new `AppSettings.rgbOffOnLock` (default `true`), stored in `profiles.json`. Tray menu checkbox "RGB beim Sperren ausschalten" / "Turn RGB off when screen locks". `powerMonitor` lock-screen/suspend handlers check the setting before calling `setRgbOff`; unlock/resume always restore. IPC `app:get-settings` / `app:update-settings`.
 - **Variante B** (native macOS CGEventTap with USB Vendor/Product filter via Swift addon) — only needed if user wants macros on side buttons currently bound to letters/symbols (their Btn1-5 = ' ` h i k). Architectural blueprint already in `## About OpenRazer as a reference source` above. Estimated ~3-4h.
@@ -201,6 +212,7 @@ Refs: [openrazer/driver/](https://github.com/openrazer/openrazer/tree/master/dri
 ## Things that wasted time and shouldn't again
 
 - Don't use `node-hid` for this device on macOS. Iface 0 (mouse) opens but reports go to the wrong place; iface 1/2 are protected ("DevSrvsID:..." errors). Use `usb` (libusb) with control transfers on endpoint 0.
+- Never run two device operations concurrently. `findByIds` returns the same `Device` object, so one call's `close()` kills the other mid-transfer ("Device is not open"), and interleaved commands make the FW silently drop binding writes. All USB access goes through `withDevice` (a promise queue) in `nagaDriver.ts`; binding writes are additionally read back via `cmd 0x8c` and retried with backoff.
 - Don't trust `status=0x02 OK` from GET_REPORT as proof the effect applied. FW returns OK for syntactically valid commands even when it ignores them (e.g., generic static on this device returns OK but doesn't visibly change LEDs; only the Trinity-specific 2-step works).
 - Don't fall back to `devices[0]` when enumerating HID interfaces — that's the mouse interface that macOS keyboard-protection blocks.
 - `device.interface` from node-hid is `-1` / unreliable on macOS. Use `usagePage` for filtering on Mac, `interface` only as a Linux/Windows hint.

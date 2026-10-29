@@ -28,6 +28,8 @@ const SIDE_PLATE_LABELS: Record<SidePlate, string[]> = {
   twelve: Array.from({ length: 12 }, (_, index) => `Numpad ${index + 1}`),
 }
 
+const SIDE_DEFAULT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=']
+
 const BASE_BUTTONS: Array<{ label: string; action: ButtonBinding['action']; value: string }> = [
   { label: 'Left Click', action: 'default', value: 'Mouse 1' },
   { label: 'Right Click', action: 'default', value: 'Mouse 2' },
@@ -54,7 +56,7 @@ export const buildButtonsForPlate = (plate: SidePlate): ButtonBinding[] => {
     label,
     hardwareIndex: 10 + index,
     action: 'key' as const,
-    value: plate === 'twelve' ? `${index + 1}` : `F${index + 1}`,
+    value: SIDE_DEFAULT_KEYS[index],
   }))
 
   return [...base, ...side]

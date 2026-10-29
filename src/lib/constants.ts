@@ -52,6 +52,8 @@ export const BUTTON_ACTION_IDS = [
   'disabled',
 ] as const
 
+export const SIDE_BUTTON_ACTION_IDS = ['default', 'key', 'macro', 'mouse-button'] as const
+
 export const MOUSE_BUTTONS = ['Mouse 1', 'Mouse 2', 'Mouse 3', 'Mouse 4', 'Mouse 5']
 
 export const REACTIVE_SPEEDS: Array<{ value: 1 | 2 | 3 | 4; labelKey: string }> = [

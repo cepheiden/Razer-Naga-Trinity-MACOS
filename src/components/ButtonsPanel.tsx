@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
-import { BUTTON_ACTION_IDS, MOUSE_BUTTONS } from '../lib/constants'
+import { BUTTON_ACTION_IDS, MOUSE_BUTTONS, SIDE_BUTTON_ACTION_IDS } from '../lib/constants'
 import type { ButtonActionKind, ButtonBinding } from '../../electron/types'
 
 const needsValue = (action: ButtonActionKind) =>
@@ -39,6 +39,7 @@ export function ButtonsPanel() {
             <BindingRow
               key={button.id}
               binding={button}
+              actions={BUTTON_ACTION_IDS}
               macros={profile.macros}
               onChange={updateButton}
             />
@@ -61,6 +62,7 @@ export function ButtonsPanel() {
             <BindingRow
               key={button.id}
               binding={button}
+              actions={SIDE_BUTTON_ACTION_IDS}
               macros={profile.macros}
               onChange={updateButton}
             />
@@ -73,11 +75,12 @@ export function ButtonsPanel() {
 
 interface BindingRowProps {
   binding: ButtonBinding
+  actions: readonly ButtonActionKind[]
   macros: ReturnType<typeof useActiveProfile>['macros']
   onChange(next: ButtonBinding): void
 }
 
-function BindingRow({ binding, macros, onChange }: BindingRowProps) {
+function BindingRow({ binding, actions, macros, onChange }: BindingRowProps) {
   const { t, i18n } = useTranslation()
   const showInput = needsValue(binding.action)
   // Base-Button-Labels über i18n auflösen; gespeicherter Label dient als Fallback (z.B. für custom Side-Button-Namen).
@@ -100,7 +103,7 @@ function BindingRow({ binding, macros, onChange }: BindingRowProps) {
           })
         }
       >
-        {BUTTON_ACTION_IDS.map((action) => (
+        {actions.map((action) => (
           <option key={action} value={action}>
             {t(`actions.${action}`)}
           </option>
