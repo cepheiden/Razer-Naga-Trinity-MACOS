@@ -11,7 +11,8 @@
     "build:electron": "rm -rf dist-electron && mkdir -p dist-electron && esbuild electron/main.ts --bundle --platform=node --format=cjs --external:electron --external:usb --outfile=dist-electron/main.cjs && esbuild electron/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/preload.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:pack": "npm run build && electron-builder --dir"
+    "electron:pack": "npm run build && electron-builder --dir",
+    "icon": "tools/make_icon.sh"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -52,7 +53,17 @@
       "dist-electron"
     ],
     "mac": {
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "icon": "Resources/AppIcon.icns",
+      "extendInfo": {
+        "CFBundleIconName": "AppIcon"
+      },
+      "extraResources": [
+        {
+          "from": "Resources/Assets.car",
+          "to": "Assets.car"
+        }
+      ]
     },
     "directories": {
       "output": "release"

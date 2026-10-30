@@ -56,8 +56,9 @@ Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, s
 - Makros ohne zugewiesene Taste sind als „keiner Taste zugewiesen“ markiert.
 - Wiederholmodi „Gedrückt halten“ und „Umschalten“ (von globalShortcut nicht umsetzbar) werden nicht mehr angeboten; alte Profile zeigen sie als „nicht unterstützt“.
 
-### S9 App-Icon · todo
+### S9 App-Icon · done
 - Eigenes App-Icon statt Electron-Standard, im Dock und im Finder.
+- Quelle `Icon/AppIcon.icon` (Icon Composer, SVG-Layer: Maus-Silhouette + 3×3-Tastenraster, kein Razer-Logo). `npm run icon` kompiliert nach `Resources/` (`AppIcon.icns` + `Assets.car` für Liquid Glass), `tools/icon_review.sh` rendert alle Looks.
 
 ## M3 – Code
 

@@ -1,0 +1,21 @@
+{
+  "fill" : {
+    "automatic-gradient" : "srgb:0.03000,0.09000,0.05500,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : { "solid" : "srgb:0.00000,1.00000,0.40000,1.00000" },
+          "glass" : true,
+          "image-name" : "keys.svg",
+          "name" : "keys"
+        },
+        { "glass" : true, "image-name" : "body.svg", "name" : "body", "opacity" : 0.35 }
+      ],
+      "shadow" : { "kind" : "layer-color", "opacity" : 0.6 },
+      "translucency" : { "enabled" : true, "value" : 0.4 }
+    }
+  ],
+  "supported-platforms" : { "squares" : [ "macOS" ] }
+}
