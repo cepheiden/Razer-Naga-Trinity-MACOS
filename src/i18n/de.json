@@ -26,7 +26,7 @@
     "language": "Sprache"
   },
   "sections": {
-    "lighting": "Lighting",
+    "lighting": "Beleuchtung",
     "performance": "Performance",
     "buttons": "Tasten",
     "macros": "Makros"
@@ -75,7 +75,7 @@
   },
   "zones": {
     "logo": { "label": "Logo", "description": "Razer-Logo am Heck" },
-    "scroll": { "label": "Scroll", "description": "Mausrad-Beleuchtung" },
+    "scroll": { "label": "Mausrad", "description": "Mausrad-Beleuchtung" },
     "side": { "label": "Underglow", "description": "Synchron auf alle Zonen" }
   },
   "effects": {
@@ -96,14 +96,14 @@
     "sensitivityEyebrow": "Sensitivität",
     "dpiStagesTitle": "DPI-Stufen",
     "addStage": "Stufe hinzufügen",
-    "activeDpi": "Active DPI",
+    "activeDpi": "Aktive DPI",
     "liveOnMouse": "Live an der Maus",
     "liveStage": "Stufe {{stage}} auf der Maus",
     "stageActivateAria": "Stufe {{n}} aktivieren",
     "removeStageAria": "Stufe entfernen",
     "quickSelect": "Schnellauswahl",
     "responseEyebrow": "Reaktionszeit",
-    "pollingTitle": "Polling Rate",
+    "pollingTitle": "Polling-Rate",
     "pollingNote": "Höhere Polling-Raten erhöhen die Präzision und CPU-Last. 1000 Hz wird für Gaming empfohlen.",
     "plateEyebrow": "Konfiguration",
     "plateTitle": "Seitenplatte",
@@ -125,7 +125,7 @@
     "baseTitle": "Maustasten",
     "bindings": "Belegungen",
     "sidePlateEyebrow": "Seitenplatte ·",
-    "sideTitle": "Side Panel ({{count}} Tasten)",
+    "sideTitle": "Seitentasten ({{count}})",
     "macroPick": "— Makro wählen —",
     "keyPlaceholder": "z.B. F5, Shift+1, Strg+C",
     "labels": {

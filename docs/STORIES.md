@@ -17,7 +17,7 @@ Bei 1280 × 860 und bei der Mindestbreite 1080 läuft nichts aus dem Fenster.
 - Die Seitenplatten-Zeilen brechen „12-Tasten“ nicht um, die Beschreibung darf kürzen.
 - Snapshot: `performance`.
 
-### S2 Übersetzungen vollständig · todo
+### S2 Übersetzungen vollständig · done
 Keine englischen Reste oder internen Namen in der deutschen Oberfläche.
 - „Active DPI“, Tab „Lighting“, „Polling Rate“, „Side Panel (12 Tasten)“ und „SEITENPLATTE · TWELVE“ sind übersetzt bzw. zeigen den Anzeigenamen der Platte.
 - Effektnamen (Static, Spectrum …) bleiben als Razer-Begriffe, ihre Beschreibungen sind deutsch.

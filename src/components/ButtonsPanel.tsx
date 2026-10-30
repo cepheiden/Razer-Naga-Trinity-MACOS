@@ -51,7 +51,7 @@ export function ButtonsPanel() {
         <header className="card-head">
           <div>
             <p className="eyebrow">
-              {t('buttons.sidePlateEyebrow')} {profile.sidePlate.toUpperCase()}
+              {t('buttons.sidePlateEyebrow')} {t(`sidePlates.${profile.sidePlate}.label`)}
             </p>
             <h3>{t('buttons.sideTitle', { count: sideButtons.length })}</h3>
           </div>
