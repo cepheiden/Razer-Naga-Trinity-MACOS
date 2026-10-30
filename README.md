@@ -2,163 +2,80 @@
 
 ![Naga Trinity Control – Lighting panel](docs/screenshot-lighting.png)
 
-Electron + React app for the **Razer Naga Trinity (VID `0x1532`, PID `0x0067`)** on macOS. Replaces Razer Synapse for the things macOS users actually need:
+Electron + React app for the **Razer Naga Trinity (VID `0x1532`, PID `0x0067`)** on macOS, without Razer Synapse. Not affiliated with Razer; community reverse-engineering project.
 
-- RGB (scroll wheel + logo, with multiple effects)
-- DPI stages and active-stage cycling, with a **live DPI readout** that follows the DPI+/DPI− buttons on the mouse
-- Polling rate (125 / 500 / 1000 Hz)
-- Side-panel button remapping (key, key combo like `Shift+1`, Mouse 1-5, or macro) for the 12- and 7-button plates, persisted in EEPROM
-- Multi-step macros (text auto-type) triggered from side buttons
-- Optional RGB-off when the screen locks / sleeps; auto-restore on unlock/wake and after re-plugging the mouse
-- Macro cards show which side button triggers each macro and whether its shortcut is active
-- Mac app menu with shortcuts: ⌘S save, ⌘↩ send to mouse, ⌘N new profile, ⌘D duplicate, ⌘1–⌘4 sections, ⌘, settings
-- Settings window (⌘,): open at login, RGB off on lock, language
-- Auto-launch at login, lives in the menu bar (tray-mode daemon)
-- **Bilingual UI: German / English**, auto-detected from the system locale, manually switchable in the sidebar footer. Tray menu follows the same language.
+## Features
 
-The mouse keeps its DPI / polling / button mapping after unplug, sleep, reboot — only RGB and macros require the app running (limitation of the firmware, same as Synapse).
+| Feature | On the mouse | In the app |
+|---|---|---|
+| RGB (scroll wheel + logo), several effects | lost on unplug (firmware limit, same with Synapse) | ✅ re-applied on start, unlock/wake and re-plug; optional off on lock |
+| DPI stages, active stage | stored | ✅ live readout follows DPI+/DPI− |
+| Polling rate (125 / 500 / 1000 Hz) | stored | ✅ |
+| Side buttons, 12- and 7-button plate: key, combo (`Shift+1`), Mouse 1–5 or macro | stored | ✅ read back after every write |
+| Wheel tilt left/right | stored | ✅ Browser back/forward |
+| Macros (multi-step text) | – | ✅ side button sends F13–F24, app types the text; each macro shows its button and whether it is active |
+| Side buttons on the 2-button plate, base buttons, profile slots, per-key RGB | – | 🚧 not yet |
 
-Not affiliated with Razer. Community reverse-engineering project.
+Also: menu-bar mode with open at login, app menu with shortcuts (⌘S save, ⌘↩ send to mouse, ⌘N / ⌘D new / duplicate profile, ⌘1–⌘4 sections, ⌘, settings), German and English UI.
+
+DPI, polling rate and button bindings stay on the mouse after unplug or reboot. RGB and macros need the app running.
 
 ## Requirements
 
-- macOS 13 (Ventura) or newer; tested on macOS 15.5 Sequoia (Darwin 25.x)
-- Node 20+ (Node 26 confirmed)
-- A Razer Naga Trinity Edition (PID `0x0067`)
-- Free USB port (the mouse must be wired during use)
+- macOS 13 or newer; tested on **macOS 27.2** (Apple silicon)
+- Node 20+ (tested with Node 26)
+- Razer Naga Trinity, wired
 
-## Installation
-
-### From source (current state)
+## Install and run
 
 ```bash
 git clone git@github.com:cepheiden/Razer-Naga-Trinity-MACOS.git
 cd Razer-Naga-Trinity-MACOS
 npm install
-npm run dev
+npm run dev                # or: npm run build && npm run electron:pack → release/mac-arm64/Naga Trinity Control.app
 ```
 
-On first launch:
+1. Plug in the mouse and click **Send to mouse** (⌘↩). RGB, DPI, polling rate and side buttons are written.
+2. The first macro asks for **Accessibility** access (System Settings → Privacy & Security → Accessibility). Grant it to *Naga Trinity Control* (or *Electron* when running `npm run dev`) and restart the app.
+3. In **Settings** (⌘,) turn on *Open at login*; the app then lives in the menu bar and applies the active profile on every start.
 
-1. **Plug the Naga Trinity in.** The app opens with a menu-bar diamond icon and a main window. UI language is detected from the system locale (German or English). Switchable any time via the **DE / EN buttons in the sidebar footer**.
-2. Click **"Send to mouse" / "An Maus senden"** — RGB, DPI, polling rate, and (if configured) side-button bindings are written to the mouse.
-3. **First macro use** triggers a macOS permission prompt for *Accessibility*. Grant it: *System Settings → Privacy & Security → Accessibility* → enable **Electron**. If the prompt doesn't appear, add `node_modules/electron/dist/Electron.app` manually. After granting, restart Electron (`pkill -9 Electron && npm run dev`).
-4. Optionally enable **"Launch at macOS login"** from the tray menu — the app then auto-launches on login, lives invisibly in the menu bar, and applies the active profile on every startup.
-5. The tray menu also has **"Turn RGB off when screen locks"** — checked by default. Uncheck it if you want the lights to keep glowing during lock/sleep.
-
-### Packaging a stand-alone app
-
-```bash
-npm run build           # full production build (tsc + vite + esbuild)
-npm run electron:pack   # creates an unsigned .app in release/
-```
-
-For a signed/notarised release for distribution, configure `electron-builder` in `package.json` with your Apple Developer cert.
+The packaged app is unsigned. For distribution, add your Developer ID to the `electron-builder` config in `package.json`.
 
 ### Development
 
 ```bash
-npx tsc -b              # renderer + Electron main process (strict)
+npx tsc -b              # renderer + main process (strict)
 npm run lint
 npm test                # vitest: key parsing, side bindings, store migration
 scripts/snapshot.sh     # one PNG per page in docs/snapshots/ (own data folder, no USB writes)
-npm run icon            # recompile Icon/AppIcon.icon (needs Xcode 26)
+npm run icon            # compile Icon/AppIcon.icon (Xcode 26+)
 ```
+
+Changes per version: [CHANGELOG.md](CHANGELOG.md). Architecture: [ARCHITECTURE.md](ARCHITECTURE.md). Protocol details and hardware findings: [CLAUDE.md](CLAUDE.md).
 
 ## Troubleshooting
 
-- **`cannot open device with path DevSrvsID:...`** – legacy `node-hid` error. Should not happen with this codebase (we use `usb` / libusb on endpoint 0). If you see it, another instance of Electron is already running.
-- **Macro fires but nothing types** – Accessibility permission missing for Electron. Re-grant and restart.
-- **Side buttons still send numbers 1-9 after configuring a macro** – click "An Maus senden" once; the hardware-binding only writes when you explicitly apply.
-- **Apply fails with `"10" can't be written to the mouse`** – profiles created before the side-button fix stored `10` / `11` / `12` as the default values for side buttons 10-12. Change them to `0` / `-` / `=` (or *Default*) and apply again. Side buttons accept a key (`F5`, `h`, `Shift+1`), Mouse 1-5, a macro, or *Default*; anything else is rejected before any USB write.
-- **Side buttons on the 2-button plate don't change** – expected for now. Its source IDs haven't been scanned yet, so the app doesn't write side bindings for that plate.
-- **Lights stay off after USB replug** – expected. Razer firmware can persist DPI and bindings but **not** RGB (per Razer's own design; even Synapse can't). The app re-applies RGB automatically on startup; just have it auto-launch.
+- **Macro fires but nothing is typed**: Accessibility access is missing. Grant it and restart the app.
+- **Side button still sends `1`–`9` after setting a macro**: click *Send to mouse*; bindings are only written on apply.
+- **Lights are off after re-plugging**: the app restores them within about 2 seconds if it is running. The firmware cannot store RGB.
+- **`cannot open device … DevSrvsID`**: another instance of the app is running.
 
 ## How it works
 
-The driver talks to the device via `libusb` control transfers on endpoint 0 — bypasses `IOHIDFamily` and the macOS *Input Monitoring* permission that would normally block access to the Razer vendor HID interface (which macOS exposes as a keyboard usage).
+The app talks to the mouse with libusb control transfers on endpoint 0, which macOS leaves open, so no Input Monitoring permission is needed. All USB access goes through one queue.
 
-Side-button macros work by **remapping the physical buttons to F13–F24** on the mouse hardware (`SET_REPORT` to `cls 0x02 cmd 0x0c`, two-step write to profile slots 2 + 1 per Synapse's pattern), then catching those F-keys in the app via Electron's `globalShortcut` and replaying user-defined text via `osascript`. F13–F24 are unused on macOS so this doesn't conflict with normal typing.
+Side-button bindings use the command decoded from a Synapse 3 USB capture (`cls 0x02 cmd 0x0c`, written to slot 2 and then slot 1, read back with `cmd 0x8c` and retried). Each plate has its own source IDs (12-button `0x40`–`0x4b`, 7-button `0x50`–`0x56`). For a macro, the button is bound to F13–F24, which macOS does not use; the app catches the key with `globalShortcut` and types the text with `osascript`.
 
-Each side plate has its own source IDs (12-button `0x40`–`0x4b`, 7-button `0x50`–`0x56`). Every binding write is read back via `cls 0x02 cmd 0x8c` and retried with backoff, because the firmware silently drops some writes while still answering OK. All USB access runs through a single queue so that two operations (e.g. the RGB preview at window start and an apply) never share the device at the same time.
+## Credits
 
-See [`CLAUDE.md`](./CLAUDE.md) for the protocol details (Trinity-specific 2-step static effect, transaction IDs per command class, button-binding write format, Wireshark capture findings).
+- **[Ole Christian Rynning (@oc)](https://github.com/oc)**, [PR #1](https://github.com/cepheiden/Razer-Naga-Trinity-MACOS/pull/1): 7-button plate source IDs, key/combo/mouse side-button bindings, serialized USB access with read-back and retry.
+- **[OpenRazer](https://github.com/openrazer/openrazer)**: the reverse-engineering base, in particular [`razermouse_driver.c`](https://github.com/openrazer/openrazer/blob/master/driver/razermouse_driver.c) (Trinity static effect, transaction IDs), [`razerchromacommon.c`](https://github.com/openrazer/openrazer/blob/master/driver/razerchromacommon.c), the [Trinity daemon class](https://github.com/openrazer/openrazer/blob/master/daemon/openrazer_daemon/hardware/mouse.py), [PR #888](https://github.com/openrazer/openrazer/pull/888) (daemon-side RGB state) and [issue #541](https://github.com/openrazer/openrazer/issues/541).
+- **Razer**: [Insider forum on on-board memory](https://insider.razer.com/mice-and-surfaces-9/naga-trinity-on-board-memory-9754), [Naga Trinity master guide](https://dl.razerzone.com/master-guides/RazerSynapse/NagaTrinity-00000103-en.pdf). The binding command was taken from a Wireshark/USBPcap capture of Synapse 3; only the bytes on the wire were reproduced.
+- **Libraries**: Electron 42, React 19, Vite 8, TypeScript 6, [`usb`](https://github.com/node-usb/node-usb) (libusb, N-API prebuilds, no native build step), Zustand, i18next, vitest.
+- Developed with [Claude Code](https://claude.com/claude-code) (Claude Opus 5.5).
 
-## Status
+## Trademarks and license
 
-| Feature | Hardware-side | App-side |
-|---|---|---|
-| RGB (scroll + logo) | volatile while powered | ✅ applied on profile send + auto-restored on unlock/wake |
-| DPI stages | persistent (EEPROM) | ✅ set + verified via round-trip read |
-| Polling rate | persistent (EEPROM) | ✅ set + verified |
-| Side-button bindings (12- and 7-button plate) | persistent (EEPROM) | ✅ key / key combo / Mouse 1-5 / macro, read back after every write |
-| Side-button bindings (2-button plate) | persistent (EEPROM) | 🚧 source IDs not scanned yet, no writes |
-| Macros (text auto-type) | uses F13-F24 trick | ✅ `globalShortcut` + `osascript` |
-| Auto-launch + tray | n/a | ✅ login-item + menu-bar daemon |
-| Bilingual UI (DE / EN) | n/a | ✅ auto-detect + manual switch, persists across restarts; tray menu localised too |
-| RGB-off-on-lock toggle | n/a | ✅ togglable in tray menu, persists in `profiles.json` |
-| Wheel tilt L/R (4D mouse) | persistent (EEPROM) | ✅ written on every apply: Browser ← / Browser → |
-| Profile-slot switcher | reads work, write path unverified | 🚧 planned |
-| Per-key colors / matrix RGB | unverified (OpenRazer marks as `HAS_MATRIX = False  // TODO`) | 🚧 not implemented |
+**Razer** and **Naga** are trademarks of **Razer Inc.**, used only to name the compatible hardware. This project is not affiliated with, endorsed or sponsored by Razer Inc. Razer's own software is [Razer Synapse](https://www.razer.com/synapse-3).
 
-What changed in each version: [CHANGELOG.md](CHANGELOG.md).
-
-## Stack
-
-Electron 42, React 19, Vite 8, TypeScript 6, `usb` (libusb N-API), Zustand, `i18next` + `react-i18next` (with `i18next-browser-languagedetector`). No external native build step — `usb` ships N-API prebuilts that work in both Node and Electron.
-
-## Sources and credits
-
-This project would not have been possible without the following.
-
-### Contributors
-
-- **[Ole Christian Rynning (@oc)](https://github.com/oc)** – [PR #1](https://github.com/cepheiden/Razer-Naga-Trinity-MACOS/pull/1): found the 7-button plate's source IDs by scanning the bindings with `cmd 0x8c`, made key / key-combo / Mouse 1-5 side-button bindings actually reach the mouse, serialized all USB access and added read-back + retry for binding writes. Verified on hardware.
-
-### Reverse-engineering reference
-
-- **[OpenRazer](https://github.com/openrazer/openrazer)** – Linux kernel driver and userspace daemon for Razer devices. The community's foundational reverse-engineering work. Specifically referenced:
-  - [`driver/razermouse_driver.c`](https://github.com/openrazer/openrazer/blob/master/driver/razermouse_driver.c) – per-device case blocks including the Trinity static-effect 2-step protocol, transaction-ID quirks per command class, brightness command. The capability registration around line 6868 defines the hard Trinity limit (DPI, poll rate, brightness, static effect — nothing else officially).
-  - [`driver/razerchromacommon.c`](https://github.com/openrazer/openrazer/blob/master/driver/razerchromacommon.c) – `razer_naga_trinity_effect_static` (the only Trinity-specific helper exported).
-  - [`pylib/openrazer/_fake_driver/razernagatrinity.cfg`](https://github.com/openrazer/openrazer/blob/master/pylib/openrazer/_fake_driver/razernagatrinity.cfg) – confirms the four supported sysfs attributes.
-  - [`daemon/openrazer_daemon/misc/key_event_management.py`](https://github.com/openrazer/openrazer/blob/master/daemon/openrazer_daemon/misc/key_event_management.py) – the `EVIOCGRAB`-based Linux pattern for capturing macro keys; used as the architectural blueprint for the planned native-macOS Variante B.
-  - [Trinity class in `mouse.py`](https://github.com/openrazer/openrazer/blob/master/daemon/openrazer_daemon/hardware/mouse.py) – the `HAS_MATRIX = False  # TODO Device supports matrix, driver missing` comment is what alerted us to the gaps in OpenRazer's Trinity support.
-  - [PR #888 – Local device state storage](https://github.com/openrazer/openrazer/pull/888) and [PR #1149 – Persistence storage](https://github.com/openrazer/openrazer/pull/1149) – the daemon-side state-persistence pattern OpenRazer chose for non-persistent firmware state (the model we adopted for RGB).
-  - [Issue #541 – Naga Trinity support](https://github.com/openrazer/openrazer/issues/541) – community discussion thread.
-
-### Hardware specs and behaviour
-
-- **[Razer Insider Forum – Naga Trinity On-Board Memory](https://insider.razer.com/mice-and-surfaces-9/naga-trinity-on-board-memory-9754)** – Razer staff/vanguard confirmation that the Trinity stores only DPI, polling, and basic keybindings on-board; RGB and complex macros require running software.
-- **[Razer Insider Forum – Naga Trinity On-Board Profiles](https://insider.razer.com/mice-and-surfaces-9/naga-trinity-on-board-profiles-2102)** – confirms 4 onboard slots and the bottom switch button.
-- **[Razer Naga Trinity master guide (PDF)](https://dl.razerzone.com/master-guides/RazerSynapse/NagaTrinity-00000103-en.pdf)** – Razer's official user manual; useful for the physical button layout and side-plate variants.
-- **[USB HID Usage Tables (PDF, USB-IF)](https://www.usb.org/sites/default/files/hut1_5.pdf)** – HID keyboard usage IDs (`0x04`–`0xa4`) used for translating between key names and the raw codes the FW expects.
-
-### Protocol RE for the button-binding write path
-
-The `cls 0x02 cmd 0x0c` command structure was derived from a **Wireshark + USBPcap capture of Razer Synapse 3** running on Windows. The captured `.pcapng` file from a profile-save action with the Trinity attached was decoded with `tshark`. Synapse 3 itself is © Razer Inc.; only the on-wire bytes it emits — which are a function of the firmware's protocol, not Synapse's code — were observed and reproduced.
-
-### Build/runtime dependencies
-
-- **[`usb`](https://github.com/node-usb/node-usb)** (npm `usb` package) – N-API libusb bindings for Node and Electron. ABI-stable across Node v20-26 and Electron 22+.
-- **[Electron](https://electronjs.org)** – `app.setLoginItemSettings`, `Tray`, `Menu`, `globalShortcut`, `powerMonitor`, `systemPreferences.isTrustedAccessibilityClient`.
-- **[Vite](https://vitejs.dev) / [`@vitejs/plugin-react`](https://github.com/vitejs/vite-plugin-react)** – dev server and bundler for the renderer.
-- **[Zustand](https://github.com/pmndrs/zustand)** – state store in the renderer.
-- **[`i18next`](https://www.i18next.com) + [`react-i18next`](https://react.i18next.com)** + **[`i18next-browser-languagedetector`](https://github.com/i18next/i18next-browser-languageDetector)** – DE/EN translation runtime in the renderer with persistence in `localStorage`. The Electron main process keeps its own small translation table for the tray menu (it's built before the renderer loads).
-- **[esbuild](https://esbuild.github.io)** – bundles the Electron main + preload (`build:electron` script).
-- **[Wireshark / `tshark`](https://www.wireshark.org)** + **[USBPcap](https://desowin.org/usbpcap/)** – Windows-side USB capture for the Synapse RE.
-
-### macOS APIs and behaviours referenced
-
-- [`CGEventTap`](https://developer.apple.com/documentation/coregraphics/quartz_event_services) and `kCGKeyboardEventSenderUSBVendorID` – the "proper" Variante-B path for per-device event filtering (not yet implemented; documented in `CLAUDE.md` as future work).
-- [System Events / `osascript` `keystroke`](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/) – used for the macro replay.
-- TCC – [Apple's Privacy & Security overview](https://support.apple.com/guide/security/secace5e1da/web) – why `osascript` and `globalShortcut` need Accessibility permission.
-
-## Trademarks
-
-**Razer** and **Naga** are trademarks or registered trademarks of **Razer Inc.**, used here solely for the purpose of identifying the compatible hardware (Razer Naga Trinity Edition mouse) under nominative fair-use. This project is an independent community reverse-engineering effort and is **not affiliated with, endorsed by, sponsored by, or otherwise associated with Razer Inc.** Razer's official software is Razer Synapse 3, available from [razer.com](https://www.razer.com/synapse-3).
-
-All other product names, logos, and brands referenced in this repository are property of their respective owners. Use of these names does not imply endorsement.
-
-## License
-
-MIT — see [LICENSE](./LICENSE). The MIT licence covers the source code in this repository only; it grants no rights to Razer's trademarks or the Razer Naga Trinity firmware.
+MIT, see [LICENSE](./LICENSE). The license covers this repository's source code only, not Razer's trademarks or firmware.
