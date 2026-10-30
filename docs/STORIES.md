@@ -51,9 +51,10 @@ Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, s
 - ⌘, öffnet Einstellungen: Bei Anmeldung starten, RGB beim Sperren ausschalten, Sprache.
 - Änderungen wirken sofort und stimmen mit dem Tray-Menü überein.
 
-### S8 Makro-Status sichtbar · todo
+### S8 Makro-Status sichtbar · done
 - Im Makro-Bereich steht pro Makro, welche Seitentaste es auslöst und ob der Shortcut aktiv ist (`registerProfileShortcuts`-Ergebnis an den Renderer).
 - Makros ohne zugewiesene Taste sind als „keiner Taste zugewiesen“ markiert.
+- Wiederholmodi „Gedrückt halten“ und „Umschalten“ (von globalShortcut nicht umsetzbar) werden nicht mehr angeboten; alte Profile zeigen sie als „nicht unterstützt“.
 
 ### S9 App-Icon · todo
 - Eigenes App-Icon statt Electron-Standard, im Dock und im Finder.

@@ -165,6 +165,10 @@
     "disabled": "Deaktiviert"
   },
   "macros": {
+    "unsupported": "nicht unterstützt",
+    "noTrigger": "Keiner Seitentaste zugewiesen – unter Tasten zuweisen",
+    "trigger": "Seitentaste {{button}} · {{key}}",
+    "triggerStates": {"active": "aktiv", "pending": "aktiv nach „An Maus senden“", "failed": "Shortcut belegt"},
     "automationEyebrow": "Automatisierung",
     "title": "Makros",
     "newMacro": "Neues Makro",

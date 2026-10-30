@@ -123,6 +123,18 @@ export interface LiveDpi {
   stage: number
 }
 
+/** Ergebnis der letzten Shortcut-Registrierung (macroEngine) – zeigt im Makro-Bereich, welche Seitentaste welches Makro wirklich auslöst. */
+export interface MacroStatus {
+  profileId: string
+  buttons: Array<{
+    /** 1-basierte Seitentaste. */
+    button: number
+    macroId: string
+    accelerator: string
+    ok: boolean
+  }>
+}
+
 export interface ApplyResult {
   ok: boolean
   /** Fallback string in German – used when no key is set or the renderer can't translate. */

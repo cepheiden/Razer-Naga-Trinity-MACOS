@@ -1,6 +1,6 @@
 import { globalShortcut } from 'electron'
 import { spawn } from 'node:child_process'
-import type { Macro, NagaProfile } from './types'
+import type { Macro, NagaProfile, MacroStatus } from './types'
 
 // Side-Button N (1-12) wird beim Apply automatisch auf F(13+N-1) gemappt (siehe nagaDriver.ts SIDE_BUTTON_MACRO_HID). Das hier ist die korrespondierende Accelerator-Tabelle für globalShortcut.
 const SIDE_BUTTON_ACCELERATORS: readonly string[] = [
@@ -78,6 +78,7 @@ export const unregisterAllMacroShortcuts = () => {
 interface RegistrationResult {
   registered: number
   failed: number
+  status: MacroStatus
 }
 
 export const registerProfileShortcuts = (
@@ -87,6 +88,7 @@ export const registerProfileShortcuts = (
 
   let registered = 0
   let failed = 0
+  const status: MacroStatus = { profileId: profile.id, buttons: [] }
 
   for (let index = 0; index < 12; index++) {
     const binding = profile.buttons.find((b) => b.id === `side-${index + 1}`)
@@ -103,7 +105,8 @@ export const registerProfileShortcuts = (
     console.log('[naga] register', accelerator, 'for button', index + 1, '→', ok ? 'OK' : 'FAILED')
     if (ok) registered++
     else failed++
+    status.buttons.push({ button: index + 1, macroId: macro.id, accelerator, ok })
   }
 
-  return { registered, failed }
+  return { registered, failed, status }
 }

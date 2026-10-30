@@ -7,6 +7,7 @@ import type {
   DeviceInfo,
   LiveDpi,
   Macro,
+  MacroStatus,
   MacroStep,
   NagaProfile,
   ProfileStore,
@@ -21,6 +22,8 @@ export interface NagaState {
   device: DeviceInfo
   /** DPI, die gerade auf der Maus aktiv ist (folgt DPI+/DPI−); null = unbekannt bzw. Maus nicht da. */
   liveDpi: LiveDpi | null
+  /** Welche Seitentasten gerade ein Makro auslösen (Stand der letzten Registrierung im Main-Prozess). */
+  macroStatus: MacroStatus | null
   section: SectionId
   notice: (ApplyResult & { tone: 'info' | 'success' | 'error' }) | null
   isApplying: boolean
@@ -119,6 +122,7 @@ export const useNagaStore = create<NagaState>((set, get) => ({
   store: fallbackStore(),
   device: { connected: false, interfaces: 0 },
   liveDpi: null,
+  macroStatus: null,
   section: initialSection(),
   notice: null,
   isApplying: false,
@@ -127,12 +131,14 @@ export const useNagaStore = create<NagaState>((set, get) => ({
   async init() {
     if (!window.naga) return
     window.naga.onLiveDpi((liveDpi) => set({ liveDpi }))
-    const [store, device, liveDpi] = await Promise.all([
+    window.naga.onMacroStatus((macroStatus) => set({ macroStatus }))
+    const [store, device, liveDpi, macroStatus] = await Promise.all([
       window.naga.readStore(),
       window.naga.scanDevice(),
       window.naga.getLiveDpi(),
+      window.naga.getMacroStatus(),
     ])
-    set({ store, device, liveDpi })
+    set({ store, device, liveDpi, macroStatus })
   },
 
   async rescan() {

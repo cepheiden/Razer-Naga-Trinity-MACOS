@@ -1,9 +1,17 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
-import type { MacroRepeatMode, MacroStep, MacroStepType } from '../../electron/types'
+import type {
+  Macro,
+  MacroRepeatMode,
+  MacroStatus,
+  MacroStep,
+  MacroStepType,
+  NagaProfile,
+} from '../../electron/types'
 
-const REPEAT_MODE_IDS: readonly MacroRepeatMode[] = ['once', 'count', 'while-held', 'toggle']
+// globalShortcut meldet nur das Drücken – 'while-held' und 'toggle' kann die Engine nicht. Sie bleiben nur für alte Profile sichtbar (markiert).
+const REPEAT_MODE_IDS: readonly MacroRepeatMode[] = ['once', 'count']
 const STEP_TYPE_IDS: readonly MacroStepType[] = ['key', 'text', 'mouse', 'delay']
 
 const stepPreview = (step: MacroStep) => {
@@ -21,6 +29,7 @@ export function MacrosPanel() {
   const addMacroStep = useNagaStore((state) => state.addMacroStep)
   const updateMacroStep = useNagaStore((state) => state.updateMacroStep)
   const removeMacroStep = useNagaStore((state) => state.removeMacroStep)
+  const macroStatus = useNagaStore((state) => state.macroStatus)
 
   return (
     <div className="section macros-section">
@@ -68,6 +77,11 @@ export function MacrosPanel() {
                           {t(`macros.repeatModes.${mode}`)}
                         </option>
                       ))}
+                      {!REPEAT_MODE_IDS.includes(macro.repeatMode) && (
+                        <option value={macro.repeatMode}>
+                          {t(`macros.repeatModes.${macro.repeatMode}`)} ({t('macros.unsupported')})
+                        </option>
+                      )}
                     </select>
                     {macro.repeatMode === 'count' && (
                       <input
@@ -94,6 +108,8 @@ export function MacrosPanel() {
                     </button>
                   </div>
                 </header>
+
+                <MacroTriggers macro={macro} profile={profile} status={macroStatus} />
 
                 <div className="macro-preview">
                   {macro.steps.map((step, index) => (
@@ -128,6 +144,53 @@ export function MacrosPanel() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+type TriggerState = 'active' | 'pending' | 'failed'
+
+// Welche Seitentasten dieses Makro auslösen und ob der Shortcut gerade registriert ist. Profiländerungen gelten erst nach „An Maus senden“.
+function MacroTriggers({
+  macro,
+  profile,
+  status,
+}: {
+  macro: Macro
+  profile: NagaProfile
+  status: MacroStatus | null
+}) {
+  const { t } = useTranslation()
+  const triggers = profile.buttons
+    .filter((button) => button.id.startsWith('side-') && button.action === 'macro')
+    .filter((button) => button.macroId === macro.id)
+    .map((button) => {
+      const number = Number(button.id.slice('side-'.length))
+      const entry =
+        status?.profileId === profile.id
+          ? status.buttons.find((item) => item.button === number && item.macroId === macro.id)
+          : undefined
+      const state: TriggerState = !entry ? 'pending' : entry.ok ? 'active' : 'failed'
+      return { number, state }
+    })
+
+  if (triggers.length === 0) {
+    return (
+      <div className="macro-triggers">
+        <span className="trigger-chip none">{t('macros.noTrigger')}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="macro-triggers">
+      {triggers.map(({ number, state }) => (
+        <span key={number} className={`trigger-chip ${state}`}>
+          <span className="pill-dot" />
+          {t('macros.trigger', { button: number, key: `F${12 + number}` })}
+          <span className="trigger-state">{t(`macros.triggerStates.${state}`)}</span>
+        </span>
+      ))}
     </div>
   )
 }

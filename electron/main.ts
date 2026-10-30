@@ -30,7 +30,14 @@ import {
   upsertProfile,
   writeStore,
 } from './profileStore'
-import type { AppSettings, LiveDpi, NagaProfile, ProfileStore, RgbSettings } from './types'
+import type {
+  AppSettings,
+  LiveDpi,
+  MacroStatus,
+  NagaProfile,
+  ProfileStore,
+  RgbSettings,
+} from './types'
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL)
 
@@ -40,6 +47,18 @@ const snapshotSection = process.env.APP_SNAPSHOT_SECTION
 const snapshotOut = process.env.APP_SNAPSHOT_OUT
 if (snapshotSection) {
   app.setPath('userData', join(app.getPath('temp'), 'naga-trinity-snapshot'))
+}
+
+// Snapshot-Testdaten (nur im Temp-userData): Seitentaste 1 löst das Beispielmakro aus, damit der Makro-Status etwas zeigt.
+const seedSnapshotStore = async () => {
+  const store = await readStore()
+  const [profile] = store.profiles
+  const [macro] = profile?.macros ?? []
+  if (!profile || !macro) return
+  profile.buttons = profile.buttons.map((button) =>
+    button.id === 'side-1' ? { ...button, action: 'macro', macroId: macro.id, value: macro.id } : button,
+  )
+  await writeStore(store)
 }
 
 const writeSnapshot = async (window: BrowserWindow, file: string) => {
@@ -253,13 +272,23 @@ const createTray = () => {
   })
 }
 
+let macroStatus: MacroStatus | null = null
+
+// Shortcuts registrieren und den Stand an den Renderer melden (Makro-Bereich zeigt aktiv / nicht aktiv).
+const registerShortcuts = (profile: NagaProfile) => {
+  const { status, ...counts } = registerProfileShortcuts(profile)
+  macroStatus = status
+  mainWindow?.webContents.send('macros:status', macroStatus)
+  return counts
+}
+
 const applyActiveProfile = async () => {
   const store = await readStore()
   const active = store.profiles.find((p) => p.id === store.activeProfileId)
   if (!active) return
   const hwResult = await applyHardwareProfile(active)
   console.log('[naga] applyHardwareProfile:', hwResult.ok ? 'OK' : 'FAIL', '-', hwResult.message)
-  const reg = registerProfileShortcuts(active)
+  const reg = registerShortcuts(active)
   console.log('[naga] macroShortcuts:', reg)
 }
 
@@ -303,6 +332,7 @@ const registerPowerHandlers = () => {
 
 ipcMain.handle('device:scan', () => listNagaDevices())
 ipcMain.handle('device:live-dpi', () => liveDpi)
+ipcMain.handle('macros:status', () => macroStatus)
 ipcMain.handle('store:read', () => readStore())
 ipcMain.handle('store:write', async (_event, store: ProfileStore) => writeStore(store))
 ipcMain.handle('profile:upsert', async (_event, profile: NagaProfile) => upsertProfile(profile))
@@ -314,7 +344,7 @@ ipcMain.handle('profile:apply', async (_event, profile: NagaProfile) => {
   if (result.ok) {
     await upsertProfile(profile)
     await setActiveProfile(profile.id)
-    const reg = registerProfileShortcuts(profile)
+    const reg = registerShortcuts(profile)
     console.log('[naga] macroShortcuts after apply:', reg)
   }
   return result
@@ -346,6 +376,7 @@ ipcMain.handle('app:update-settings', async (_event, partial: Partial<AppSetting
 
 app.whenReady().then(async () => {
   if (snapshotSection) {
+    await seedSnapshotStore()
     refreshAppMenu()
     await createWindow()
     return

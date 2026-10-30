@@ -1777,3 +1777,45 @@ select {
   margin-left: auto;
   padding: 3px 7px;
 }
+
+/* ---------- Macro triggers (S8) ---------- */
+.macro-triggers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 2px;
+}
+
+.trigger-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.trigger-chip .trigger-state {
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.trigger-chip.active {
+  border-color: rgba(0, 255, 102, 0.4);
+  color: var(--accent);
+}
+
+.trigger-chip.pending,
+.trigger-chip.failed {
+  border-color: rgba(255, 184, 77, 0.4);
+  color: var(--warn);
+}
+
+.trigger-chip.none {
+  color: var(--text-2);
+  font-weight: 500;
+}

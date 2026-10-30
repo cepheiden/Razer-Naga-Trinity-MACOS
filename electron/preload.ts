@@ -5,6 +5,7 @@ import type {
   ApplyResult,
   DeviceInfo,
   LiveDpi,
+  MacroStatus,
   NagaProfile,
   ProfileStore,
   RgbSettings,
@@ -39,6 +40,14 @@ const api = {
   setLoginItem: (enabled: boolean) =>
     ipcRenderer.invoke('app:set-login-item', enabled) as Promise<boolean>,
   hideWindow: () => ipcRenderer.invoke('app:hide-window') as Promise<void>,
+  getMacroStatus: () => ipcRenderer.invoke('macros:status') as Promise<MacroStatus | null>,
+  onMacroStatus: (callback: (status: MacroStatus | null) => void) => {
+    const listener = (_event: unknown, status: MacroStatus | null) => callback(status)
+    ipcRenderer.on('macros:status', listener)
+    return () => {
+      ipcRenderer.removeListener('macros:status', listener)
+    }
+  },
   onMenuCommand: (callback: (command: MenuCommand) => void) => {
     const listener = (_event: unknown, command: MenuCommand) => callback(command)
     ipcRenderer.on('menu:command', listener)

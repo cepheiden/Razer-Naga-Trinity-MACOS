@@ -165,6 +165,10 @@
     "disabled": "Disabled"
   },
   "macros": {
+    "unsupported": "not supported",
+    "noTrigger": "Not assigned to a side button – assign it under Keys",
+    "trigger": "Side button {{button}} · {{key}}",
+    "triggerStates": {"active": "active", "pending": "active after “Send to mouse”", "failed": "shortcut taken"},
     "automationEyebrow": "Automation",
     "title": "Macros",
     "newMacro": "New macro",
