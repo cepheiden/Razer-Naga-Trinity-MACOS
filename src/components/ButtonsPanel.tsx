@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
-import { BUTTON_ACTION_IDS, MOUSE_BUTTONS, SIDE_BUTTON_ACTION_IDS } from '../lib/constants'
+import { MOUSE_BUTTONS, SIDE_BUTTON_ACTION_IDS } from '../lib/constants'
 import type { ButtonActionKind, ButtonBinding } from '../../electron/types'
 
 const needsValue = (action: ButtonActionKind) =>
@@ -30,19 +30,12 @@ export function ButtonsPanel() {
             <p className="eyebrow">{t('buttons.baseEyebrow')}</p>
             <h3>{t('buttons.baseTitle')}</h3>
           </div>
-          <span className="badge muted">
-            {baseButtons.length} {t('buttons.bindings')}
-          </span>
+          <span className="badge muted">{t('buttons.readOnly')}</span>
         </header>
+        <p className="muted small card-note">{t('buttons.baseNote')}</p>
         <div className="button-grid">
           {baseButtons.map((button) => (
-            <BindingRow
-              key={button.id}
-              binding={button}
-              actions={BUTTON_ACTION_IDS}
-              macros={profile.macros}
-              onChange={updateButton}
-            />
+            <FixedBindingRow key={button.id} binding={button} />
           ))}
         </div>
       </div>
@@ -69,6 +62,20 @@ export function ButtonsPanel() {
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// Grundtasten schreibt der Treiber nicht (nur Seitentasten + Rad-Kippen) – deshalb nur die feste Funktion anzeigen.
+function FixedBindingRow({ binding }: { binding: ButtonBinding }) {
+  const { t } = useTranslation()
+  return (
+    <div className="binding-row fixed">
+      <div className="binding-label">
+        <span className="binding-index">#{binding.hardwareIndex}</span>
+        <strong>{t(`buttons.labels.${binding.id}`, { defaultValue: binding.label })}</strong>
+      </div>
+      <div className="binding-static">{t(`buttons.fixed.${binding.id}`)}</div>
     </div>
   )
 }

@@ -29,7 +29,7 @@ Die Live-Vorschau leuchtet nur dort, wo die Maus LEDs hat: Mausrad und Logo.
 - Underglow bleibt als Schalter „alle Zonen synchron“, ohne eine eigene leuchtende Fläche vorzutäuschen.
 - Snapshot: `lighting`.
 
-### S4 Grundtasten ehrlich anzeigen · todo
+### S4 Grundtasten ehrlich anzeigen · done
 Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, statt wirkungslose Dropdowns anzubieten.
 - Grundtasten werden als feste Belegung (nur lesen) angezeigt, mit einem kurzen Hinweis, dass die Firmware sie nicht umbelegen lässt; die Kipp-Belegung zeigt „Browser zurück / vor“.
 - Seitentasten bleiben editierbar wie bisher.

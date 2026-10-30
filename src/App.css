@@ -1397,6 +1397,14 @@ output {
   text-overflow: ellipsis;
 }
 
+.binding-row.fixed {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.card-note {
+  margin: -6px 0 14px;
+}
+
 .binding-static {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 12px;

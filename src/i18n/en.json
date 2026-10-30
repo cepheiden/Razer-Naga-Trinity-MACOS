@@ -121,13 +121,26 @@
     "twelve": { "label": "12-key", "subtitle": "MMO / Productivity" }
   },
   "buttons": {
-    "baseEyebrow": "Standard",
+    "baseEyebrow": "Fixed on the mouse",
+    "readOnly": "Read only",
+    "baseNote": "The app only writes the side buttons and the scroll-wheel tilt to the mouse. These buttons keep their factory binding.",
     "baseTitle": "Mouse buttons",
     "bindings": "bindings",
     "sidePlateEyebrow": "Side plate ·",
     "sideTitle": "Side panel ({{count}} keys)",
     "macroPick": "— pick a macro —",
     "keyPlaceholder": "e.g. F5, Shift+1, Ctrl+C",
+    "fixed": {
+      "base-1": "Left click",
+      "base-2": "Right click",
+      "base-3": "Middle click",
+      "base-4": "Scroll ↑",
+      "base-5": "Scroll ↓",
+      "base-6": "Browser back",
+      "base-7": "Browser forward",
+      "base-8": "DPI +",
+      "base-9": "DPI −"
+    },
     "labels": {
       "base-1": "Left click",
       "base-2": "Right click",

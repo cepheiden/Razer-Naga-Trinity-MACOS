@@ -40,18 +40,6 @@ export const COLOR_SWATCHES = [
   '#a3ff12',
 ]
 
-export const BUTTON_ACTION_IDS = [
-  'default',
-  'key',
-  'macro',
-  'dpi-up',
-  'dpi-down',
-  'dpi-cycle',
-  'profile-cycle',
-  'mouse-button',
-  'disabled',
-] as const
-
 export const SIDE_BUTTON_ACTION_IDS = ['default', 'key', 'macro', 'mouse-button'] as const
 
 export const MOUSE_BUTTONS = ['Mouse 1', 'Mouse 2', 'Mouse 3', 'Mouse 4', 'Mouse 5']
