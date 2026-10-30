@@ -32,7 +32,6 @@ export function LightingPanel() {
     }
   }, [rgb])
 
-  const usesSecondary = rgb.effect === 'breathing'
   const usesWaveDirection = rgb.effect === 'wave'
   const usesReactiveSpeed = rgb.effect === 'reactive'
   const supportsColor =
@@ -105,44 +104,6 @@ export function LightingPanel() {
             ))}
           </div>
         </div>
-
-        {usesSecondary && (
-          <>
-            <header className="card-head sub">
-              <div>
-                <p className="eyebrow">{t('lighting.colorEyebrow')}</p>
-                <h3>{t('lighting.secondaryColor')}</h3>
-              </div>
-              <div className="hex-readout">{rgb.secondaryColor.toUpperCase()}</div>
-            </header>
-            <div className="color-row">
-              <input
-                type="color"
-                value={rgb.secondaryColor}
-                onChange={(event) =>
-                  updateRgb((current) => ({
-                    ...current,
-                    secondaryColor: event.target.value,
-                  }))
-                }
-              />
-              <div className="swatches">
-                {COLOR_SWATCHES.map((swatch) => (
-                  <button
-                    key={swatch}
-                    type="button"
-                    className={`swatch ${rgb.secondaryColor === swatch ? 'selected' : ''}`}
-                    style={{ background: swatch }}
-                    aria-label={`${t('lighting.secondaryColorAria')} ${swatch}`}
-                    onClick={() =>
-                      updateRgb((current) => ({ ...current, secondaryColor: swatch }))
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
 
         <div className="slider-row">
           <label>

@@ -36,8 +36,9 @@ Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, s
 - Bestehende Profile laden weiter (die gespeicherten Basis-Bindings bleiben unverändert in der Datei).
 - Snapshot: `buttons`.
 
-### S5 Breathing-Beschreibung ehrlich · todo
+### S5 Breathing-Beschreibung ehrlich · done
 - Die Beschreibung von Breathing sagt, dass die Trinity-Firmware den Effekt als feste Farbe zeigt.
+- Static sagt „eine Farbe für Mausrad und Logo“ (nicht „pro Zone“); die wirkungslose Zweitfarbe für Breathing ist ausgeblendet, die Vorschau zeigt Breathing als feste Farbe.
 - Snapshot: `lighting`.
 
 ## M2 – Mac-Gefühl

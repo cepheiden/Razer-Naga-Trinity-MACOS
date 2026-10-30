@@ -79,8 +79,8 @@
     "side": { "label": "Underglow", "description": "Mirrors all zones in sync" }
   },
   "effects": {
-    "static": { "label": "Static", "description": "One solid color per zone." },
-    "breathing": { "label": "Breathing", "description": "Soft fade between two colors." },
+    "static": { "label": "Static", "description": "One solid color for scroll wheel and logo." },
+    "breathing": { "label": "Breathing", "description": "A solid color on the Trinity – the firmware cannot breathe." },
     "spectrum": { "label": "Spectrum", "description": "Full color cycle, controlled by hardware." },
     "wave": { "label": "Wave", "description": "Wave across all zones." },
     "reactive": { "label": "Reactive", "description": "Glows on click." },

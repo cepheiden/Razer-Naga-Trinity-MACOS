@@ -775,10 +775,6 @@ button.primary-button {
   transition: opacity 240ms ease;
 }
 
-.mouse-visualizer[data-animation='glow-breathing'] .zone {
-  animation: breathing 2.6s ease-in-out infinite;
-}
-
 .mouse-visualizer[data-animation='glow-spectrum'] .zone {
   animation: spectrumHue 4s linear infinite;
 }
@@ -794,11 +790,6 @@ button.primary-button {
 
 .mouse-visualizer[data-animation='glow-reactive'] .zone {
   animation: reactive 2.6s steps(1) infinite;
-}
-
-@keyframes breathing {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
 }
 
 @keyframes spectrumHue {

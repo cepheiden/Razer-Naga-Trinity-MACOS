@@ -10,8 +10,7 @@ const effectAnimation = (rgb: RgbSettings) => {
   switch (rgb.effect) {
     case 'off':
       return 'glow-off'
-    case 'breathing':
-      return 'glow-breathing'
+    // Breathing zeigt die Trinity-FW als feste Farbe (OpenRazer-Verhalten), die Vorschau auch.
     case 'spectrum':
       return 'glow-spectrum'
     case 'wave':

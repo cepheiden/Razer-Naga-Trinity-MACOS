@@ -79,8 +79,8 @@
     "side": { "label": "Underglow", "description": "Synchron auf alle Zonen" }
   },
   "effects": {
-    "static": { "label": "Static", "description": "Eine durchgehende Farbe pro Zone." },
-    "breathing": { "label": "Breathing", "description": "Sanftes Fade zwischen zwei Farben." },
+    "static": { "label": "Static", "description": "Eine feste Farbe für Mausrad und Logo." },
+    "breathing": { "label": "Breathing", "description": "Auf der Trinity eine feste Farbe – die Firmware kann kein Atmen." },
     "spectrum": { "label": "Spectrum", "description": "Voller Farbverlauf, hardwaregesteuert." },
     "wave": { "label": "Wave", "description": "Welle über alle Zonen." },
     "reactive": { "label": "Reactive", "description": "Aufleuchten beim Klick." },
