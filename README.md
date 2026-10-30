@@ -101,6 +101,8 @@ See [`CLAUDE.md`](./CLAUDE.md) for the protocol details (Trinity-specific 2-step
 | Profile-slot switcher | reads work, write path unverified | 🚧 planned |
 | Per-key colors / matrix RGB | unverified (OpenRazer marks as `HAS_MATRIX = False  // TODO`) | 🚧 not implemented |
 
+What changed in each version: [CHANGELOG.md](CHANGELOG.md).
+
 ## Stack
 
 Electron 42, React 19, Vite 8, TypeScript 6, `usb` (libusb N-API), Zustand, `i18next` + `react-i18next` (with `i18next-browser-languagedetector`). No external native build step — `usb` ships N-API prebuilts that work in both Node and Electron.
