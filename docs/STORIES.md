@@ -47,7 +47,7 @@ Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, s
 - ⌘S Speichern, ⌘↩ An Maus senden, ⌘N Neues Profil, ⌘D Duplizieren, ⌘1–⌘4 Bereiche, ⌘W Fenster schließen (App bleibt in der Menüleiste).
 - Menütexte DE/EN wie die Tray-Texte.
 
-### S7 Einstellungen im Fenster · todo
+### S7 Einstellungen im Fenster · done
 - ⌘, öffnet Einstellungen: Bei Anmeldung starten, RGB beim Sperren ausschalten, Sprache.
 - Änderungen wirken sofort und stimmen mit dem Tray-Menü überein.
 

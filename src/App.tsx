@@ -8,6 +8,7 @@ import { LightingPanel } from './components/LightingPanel'
 import { PerformancePanel } from './components/PerformancePanel'
 import { ButtonsPanel } from './components/ButtonsPanel'
 import { MacrosPanel } from './components/MacrosPanel'
+import { SettingsDialog } from './components/SettingsDialog'
 
 function App() {
   const init = useNagaStore((state) => state.init)
@@ -33,6 +34,7 @@ function App() {
           {section === 'macros' && <MacrosPanel />}
         </div>
       </section>
+      <SettingsDialog />
     </main>
   )
 }

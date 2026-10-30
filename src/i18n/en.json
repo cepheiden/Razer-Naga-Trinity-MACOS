@@ -188,5 +188,19 @@
       "mouse": "Mouse",
       "delay": "Delay"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "close": "Close settings",
+    "done": "Done",
+    "openAtLogin": "Open at login",
+    "openAtLoginHint": "Starts hidden in the menu bar and applies the active profile.",
+    "rgbOffOnLock": "Turn RGB off when screen locks",
+    "rgbOffOnLockHint": "Lights off on screen lock and sleep, back on afterwards.",
+    "language": "Language",
+    "languages": {
+      "de": "Deutsch",
+      "en": "English"
+    }
   }
 }

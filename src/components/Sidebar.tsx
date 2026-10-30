@@ -1,4 +1,4 @@
-import { Languages, MousePointer2, Plus, Radar, RefreshCw } from 'lucide-react'
+import { Languages, MousePointer2, Plus, Radar, RefreshCw, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../i18n'
 import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
@@ -12,14 +12,12 @@ export function Sidebar() {
   const selectProfile = useNagaStore((state) => state.selectProfile)
   const createProfile = useNagaStore((state) => state.createProfile)
   const rescan = useNagaStore((state) => state.rescan)
+  const switchLanguage = useNagaStore((state) => state.setLanguage)
+  const setSettingsOpen = useNagaStore((state) => state.setSettingsOpen)
 
   const activeStage = active.dpi.stages[active.dpi.activeStage - 1] ?? active.dpi.stages[0]
   const currentLang = (i18n.resolvedLanguage ?? i18n.language ?? 'de').slice(0, 2) as SupportedLanguage
 
-  const switchLanguage = (code: SupportedLanguage) => {
-    void i18n.changeLanguage(code)
-    void window.naga?.updateSettings?.({ language: code })
-  }
 
   return (
     <aside className="sidebar">
@@ -120,6 +118,15 @@ export function Sidebar() {
               {code.toUpperCase()}
             </button>
           ))}
+          <button
+            type="button"
+            className="lang-button settings-button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label={t('settings.title')}
+            title={`${t('settings.title')} (⌘,)`}
+          >
+            <Settings size={12} />
+          </button>
         </div>
         <p className="trademark-note">
           <span>{t('trademark.short')}</span>

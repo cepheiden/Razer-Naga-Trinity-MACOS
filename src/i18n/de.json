@@ -188,5 +188,19 @@
       "mouse": "Maus",
       "delay": "Pause"
     }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "close": "Einstellungen schließen",
+    "done": "Fertig",
+    "openAtLogin": "Bei Anmeldung starten",
+    "openAtLoginHint": "Startet unsichtbar in der Menüleiste und wendet das aktive Profil an.",
+    "rgbOffOnLock": "RGB beim Sperren ausschalten",
+    "rgbOffOnLockHint": "Licht aus bei Bildschirmsperre und Ruhezustand, danach wieder an.",
+    "language": "Sprache",
+    "languages": {
+      "de": "Deutsch",
+      "en": "English"
+    }
   }
 }

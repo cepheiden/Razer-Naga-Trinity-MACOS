@@ -33,6 +33,8 @@ export interface NagaState {
   runMenuCommand(command: MenuCommand): void
   isSettingsOpen: boolean
   setSettingsOpen(open: boolean): void
+  /** Sprache umschalten und im Main-Prozess speichern (Tray- und App-Menü folgen). */
+  setLanguage(code: 'de' | 'en'): void
   selectProfile(id: string): Promise<void>
   createProfile(): Promise<void>
   duplicateProfile(): Promise<void>
@@ -161,6 +163,11 @@ export const useNagaStore = create<NagaState>((set, get) => ({
   isSettingsOpen: false,
   setSettingsOpen(open) {
     set({ isSettingsOpen: open })
+  },
+
+  setLanguage(code) {
+    void i18n.changeLanguage(code)
+    void window.naga?.updateSettings?.({ language: code })
   },
 
   async selectProfile(id) {
