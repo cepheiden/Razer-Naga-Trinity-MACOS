@@ -46,6 +46,8 @@ Spectrum/wave/reactive use the generic ext_matrix per-zone (`cls 0x0f cmd 0x02`)
 - `electron/nagaDriver.ts` — USB control-transfer driver. Exports `applyHardwareProfile`, `applyRgbOnly`, `setRgbOff`, `listNagaDevices`. All async.
 - `electron/main.ts` — IPC handlers + `powerMonitor` hooks (`lock-screen` / `unlock-screen` / `suspend` / `resume` → brightness 0 / re-apply active profile).
 - `electron/profileStore.ts` — JSON persistence at `app.getPath('userData')/profiles.json`. Has `migrateButtons` for old → new base-button layout migration (detects legacy `base-6` with `action=dpi-up`).
+- `electron/sideBindings.ts` — pure profile → source/action resolution (key combos, F13–F24 macro mapping, per-plate source IDs). `electron/storeMigration.ts` — profile defaults + versioned `profiles.json` migration. Both tested with `npm test` (vitest).
+- `electron/appMenu.ts` — DE/EN app menu; items send `menu:command` to the renderer (`runMenuCommand` in the store).
 - `electron/buttonLayout.ts` — shared button layout (`SIDE_PLATE_LABELS`, `SIDE_DEFAULT_KEYS`, `buildButtonsForPlate`), no Node/Electron imports, used by `profileStore.ts` and the renderer store.
 - `src/store/useNagaStore.ts` — Zustand store (renderer).
 - `scripts/snapshot.sh` — screenshot per page into `docs/snapshots/` with its own userData folder and no USB writes (`APP_SNAPSHOT_SECTION`, `APP_SNAPSHOT_WIDTH`). Backlog in `docs/STORIES.md`, architecture in `ARCHITECTURE.md`.
@@ -134,8 +136,7 @@ The 12- and 7-button plates share factory defaults (1..7), so seeing the right c
 - ✅ **RGB-off-on-lock toggle** done (2026-05-12 night) — new `AppSettings.rgbOffOnLock` (default `true`), stored in `profiles.json`. Tray menu checkbox "RGB beim Sperren ausschalten" / "Turn RGB off when screen locks". `powerMonitor` lock-screen/suspend handlers check the setting before calling `setRgbOff`; unlock/resume always restore. IPC `app:get-settings` / `app:update-settings`.
 - **Variante B** (native macOS CGEventTap with USB Vendor/Product filter via Swift addon) — only needed if user wants macros on side buttons currently bound to letters/symbols (their Btn1-5 = ' ` h i k). Architectural blueprint already in `## About OpenRazer as a reference source` above. Estimated ~3-4h.
 - ✅ Shared button layout in `electron/buttonLayout.ts` (2026-10-30).
-- UI: surface which side buttons have active shortcuts vs. skipped (Engine returns `{ registered, skippedUnsafe, noKeymap }` from `registerProfileShortcuts`, but main.ts doesn't pass it to renderer yet).
-- UI: settings toggle for "open at login" (currently only in tray menu).
+- ✅ Macro status in the UI (`macros:status`), settings dialog (⌘,), app menu with shortcuts, app icon (`Icon/AppIcon.icon`, `npm run icon`) – 2026-10-30, see `docs/STORIES.md`.
 
 ## Macro engine architecture (Variante A)
 

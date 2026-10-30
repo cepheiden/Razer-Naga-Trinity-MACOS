@@ -5,11 +5,14 @@
 Electron + React app for the **Razer Naga Trinity (VID `0x1532`, PID `0x0067`)** on macOS. Replaces Razer Synapse for the things macOS users actually need:
 
 - RGB (scroll wheel + logo, with multiple effects)
-- DPI stages and active-stage cycling
+- DPI stages and active-stage cycling, with a **live DPI readout** that follows the DPI+/DPI− buttons on the mouse
 - Polling rate (125 / 500 / 1000 Hz)
 - Side-panel button remapping (key, key combo like `Shift+1`, Mouse 1-5, or macro) for the 12- and 7-button plates, persisted in EEPROM
 - Multi-step macros (text auto-type) triggered from side buttons
-- Optional RGB-off when the screen locks / sleeps (toggleable in the tray menu); auto-restore on unlock/wake
+- Optional RGB-off when the screen locks / sleeps; auto-restore on unlock/wake and after re-plugging the mouse
+- Macro cards show which side button triggers each macro and whether its shortcut is active
+- Mac app menu with shortcuts: ⌘S save, ⌘↩ send to mouse, ⌘N new profile, ⌘D duplicate, ⌘1–⌘4 sections, ⌘, settings
+- Settings window (⌘,): open at login, RGB off on lock, language
 - Auto-launch at login, lives in the menu bar (tray-mode daemon)
 - **Bilingual UI: German / English**, auto-detected from the system locale, manually switchable in the sidebar footer. Tray menu follows the same language.
 
@@ -51,6 +54,16 @@ npm run electron:pack   # creates an unsigned .app in release/
 ```
 
 For a signed/notarised release for distribution, configure `electron-builder` in `package.json` with your Apple Developer cert.
+
+### Development
+
+```bash
+npx tsc -b              # renderer + Electron main process (strict)
+npm run lint
+npm test                # vitest: key parsing, side bindings, store migration
+scripts/snapshot.sh     # one PNG per page in docs/snapshots/ (own data folder, no USB writes)
+npm run icon            # recompile Icon/AppIcon.icon (needs Xcode 26)
+```
 
 ## Troubleshooting
 

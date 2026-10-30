@@ -22,7 +22,7 @@ Benefits: locality (one place for the button layout), and S10 in the backlog is 
 Proof of same behavior: JSON output of `buildButtonsForPlate` for all three plates is byte-identical before and after; `tsc`, `lint` and the `buttons` snapshot unchanged.
 Plan: one commit (new module, both callers moved).
 
-## Device transport separate from device features  [Worth exploring]
+## Device transport separate from device features  [Worth exploring – partly done]
 
 Files: `electron/nagaDriver.ts` (680)
 Signal: one file holds USB transport (queue, report building, CRC, SET/GET_REPORT), RGB, DPI, polling rate, button bindings and key-name parsing.
@@ -30,8 +30,9 @@ Problem: the hardware findings of the last two days (storage flags, read-back, l
 Proposal: `nagaTransport.ts` (`withDevice`, `query`, `send`, `createReport`) as a deep module; feature files `rgb.ts`, `dpi.ts`, `bindings.ts` on top; `nagaDriver.ts` keeps the exported API.
 Benefits: transport rules (one queue, validated replies) live in one place.
 Proof: no tests exist and behavior can only be checked on the real mouse, so this needs a hardware check (apply, read back bindings and DPI) before and after. Not for an unattended run.
+Status (after M2): the pure part moved to `electron/sideBindings.ts` (bindings read back byte-identical). Splitting the transport itself (`withDevice`, report building) from RGB/DPI is still open.
 
-## Unit tests for pure logic  [Worth exploring]
+## Unit tests for pure logic  [Worth exploring – done after M2]
 
 Files: `electron/nagaDriver.ts` (`parseKeyCombo`, `resolveSideAction`), `electron/profileStore.ts` (`migrate`, `migrateLegacySideDefaults`)
 Signal: bugs in this logic (legacy `"10"` values blocking Apply) were only found on the user's machine.
@@ -45,3 +46,5 @@ Proposal: add `vitest`, export the pure functions (or move them into small modul
 ## Top recommendation
 
 **One button layout for main and renderer** (Strong). Done unattended in this check-in.
+
+After M2: unit tests (vitest, 16 tests) and the pure-module split are done; the main process is now typechecked (`tsconfig.electron.json`), which it was not before.
