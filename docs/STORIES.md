@@ -1,6 +1,6 @@
 # Stories – Naga Trinity Control
 
-Status: `todo` · `doing` · `done` · `blocked`. Snapshots: `scripts/snapshot.sh [seite…]` → `docs/snapshots/<seite>.png` (eigener Datenordner, keine USB-Writes).
+Status: `todo` · `doing` · `done` · `blocked`. Snapshots: `scripts/snapshot.sh [seite…]` → `docs/snapshots/<seite>.png` (offscreen gerendert, eigener Datenordner, keine USB-Writes; `COMMAND=<menübefehl>` und `WIDTH=<px>` optional).
 
 ## M0 – Werkzeug
 
@@ -43,7 +43,7 @@ Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, s
 
 ## M2 – Mac-Gefühl
 
-### S6 App-Menü mit Tastenkürzeln · todo
+### S6 App-Menü mit Tastenkürzeln · done
 - ⌘S Speichern, ⌘↩ An Maus senden, ⌘N Neues Profil, ⌘D Duplizieren, ⌘1–⌘4 Bereiche, ⌘W Fenster schließen (App bleibt in der Menüleiste).
 - Menütexte DE/EN wie die Tray-Texte.
 

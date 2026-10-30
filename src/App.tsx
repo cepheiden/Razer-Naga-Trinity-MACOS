@@ -12,10 +12,13 @@ import { MacrosPanel } from './components/MacrosPanel'
 function App() {
   const init = useNagaStore((state) => state.init)
   const section = useNagaStore((state) => state.section)
+  const runMenuCommand = useNagaStore((state) => state.runMenuCommand)
 
   useEffect(() => {
     void init()
   }, [init])
+
+  useEffect(() => window.naga?.onMenuCommand(runMenuCommand), [runMenuCommand])
 
   return (
     <main className="shell">

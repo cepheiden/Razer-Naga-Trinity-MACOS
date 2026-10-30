@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import i18n from '../i18n'
 import { buildButtonsForPlate } from '../../electron/buttonLayout'
+import type { MenuCommand } from '../../electron/appMenu'
 import type {
   ApplyResult,
   DeviceInfo,
@@ -28,6 +29,10 @@ export interface NagaState {
   init(): Promise<void>
   rescan(): Promise<void>
   setSection(section: SectionId): void
+  /** Befehl aus dem App-Menü (⌘S, ⌘↩, ⌘1–4 …) – dieselben Aktionen wie die Buttons. */
+  runMenuCommand(command: MenuCommand): void
+  isSettingsOpen: boolean
+  setSettingsOpen(open: boolean): void
   selectProfile(id: string): Promise<void>
   createProfile(): Promise<void>
   duplicateProfile(): Promise<void>
@@ -136,6 +141,26 @@ export const useNagaStore = create<NagaState>((set, get) => ({
 
   setSection(section) {
     set({ section })
+  },
+
+  runMenuCommand(command) {
+    const state = get()
+    if (command.startsWith('section:')) {
+      const section = command.slice('section:'.length)
+      const match = SECTION_IDS.find((id) => id === section)
+      if (match) state.setSection(match)
+      return
+    }
+    if (command === 'save') void state.saveActive()
+    if (command === 'apply' && !state.isApplying) void state.applyActive()
+    if (command === 'new-profile') void state.createProfile()
+    if (command === 'duplicate-profile') void state.duplicateProfile()
+    if (command === 'settings') state.setSettingsOpen(true)
+  },
+
+  isSettingsOpen: false,
+  setSettingsOpen(open) {
+    set({ isSettingsOpen: open })
   },
 
   async selectProfile(id) {

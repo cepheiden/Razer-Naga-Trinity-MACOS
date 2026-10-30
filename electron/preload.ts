@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { MenuCommand } from './appMenu'
 import type {
   AppSettings,
   ApplyResult,
@@ -38,6 +39,13 @@ const api = {
   setLoginItem: (enabled: boolean) =>
     ipcRenderer.invoke('app:set-login-item', enabled) as Promise<boolean>,
   hideWindow: () => ipcRenderer.invoke('app:hide-window') as Promise<void>,
+  onMenuCommand: (callback: (command: MenuCommand) => void) => {
+    const listener = (_event: unknown, command: MenuCommand) => callback(command)
+    ipcRenderer.on('menu:command', listener)
+    return () => {
+      ipcRenderer.removeListener('menu:command', listener)
+    }
+  },
   getSettings: () => ipcRenderer.invoke('app:get-settings') as Promise<AppSettings>,
   updateSettings: (partial: Partial<AppSettings>) =>
     ipcRenderer.invoke('app:update-settings', partial) as Promise<AppSettings>,

@@ -18,32 +18,14 @@ rm -rf "${TMPDIR:-/tmp}/naga-trinity-snapshot"
 
 electron_bin=node_modules/electron/dist/Electron.app/Contents/MacOS/Electron
 
-window_id() {
-  osascript -l JavaScript -e "
-    ObjC.import('CoreGraphics')
-    const all = ObjC.deepUnwrap(ObjC.castRefToObject(\$.CGWindowListCopyWindowInfo(\$.kCGWindowListOptionOnScreenOnly, 0)))
-    const w = all.find((x) => x.kCGWindowOwnerPID === $1 && x.kCGWindowLayer === 0 && x.kCGWindowBounds.Height > 400)
-    w ? w.kCGWindowNumber : ''"
-}
-
+# Offscreen-Render in electron/main.ts (APP_SNAPSHOT_OUT): kein Fenster auf dem Bildschirm, klappt auch bei gesperrtem Mac.
+#   COMMAND=settings scripts/snapshot.sh lighting   führt vorher einen Menübefehl aus → <seite>-settings.png
 for page in $pages; do
-  env -u ELECTRON_RUN_AS_NODE APP_SNAPSHOT_SECTION="$page" APP_SNAPSHOT_WIDTH="${WIDTH:-}" "$electron_bin" . >/dev/null 2>&1 &
-  pid=$!
-  wid=''
-  for _ in {1..60}; do
-    wid=$(window_id $pid)
-    [[ -n "$wid" ]] && break
-    sleep 0.25
-  done
-  if [[ -z "$wid" ]]; then
-    echo "FAIL $page: kein Fenster" >&2
-    kill $pid 2>/dev/null || true
-    exit 1
-  fi
-  sleep 1.5
-  file="$out/$page${WIDTH:+-$WIDTH}.png"
-  screencapture -x -o -l "$wid" "$file"
-  kill $pid 2>/dev/null || true
-  wait $pid 2>/dev/null || true
-  echo "$file"
+  file="$PWD/$out/$page${WIDTH:+-$WIDTH}${COMMAND:+-${COMMAND//:/-}}.png"
+  rm -f "$file"
+  env -u ELECTRON_RUN_AS_NODE APP_SNAPSHOT_SECTION="$page" APP_SNAPSHOT_OUT="$file" \
+    APP_SNAPSHOT_WIDTH="${WIDTH:-}" APP_SNAPSHOT_COMMAND="${COMMAND:-}" \
+    "$electron_bin" . >/dev/null 2>&1
+  [[ -f "$file" ]] || { echo "FAIL $page: kein Bild" >&2; exit 1; }
+  echo "$out/${file:t}"
 done

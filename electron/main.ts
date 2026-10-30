@@ -9,6 +9,7 @@ import {
   systemPreferences,
   Tray,
 } from 'electron'
+import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   applyHardwareProfile,
@@ -19,6 +20,7 @@ import {
   setRgbOff,
 } from './nagaDriver'
 import { registerProfileShortcuts, unregisterAllMacroShortcuts } from './macroEngine'
+import { buildAppMenu, type MenuCommand } from './appMenu'
 import {
   deleteProfile,
   duplicateProfile,
@@ -34,8 +36,19 @@ const isDev = Boolean(process.env.VITE_DEV_SERVER_URL)
 
 // Snapshot-Modus (scripts/snapshot.sh): eigener userData-Ordner mit Default-Profil, kein Apply, keine USB-Writes, keine Shortcuts – die echten Profile und die Maus bleiben unberührt.
 const snapshotSection = process.env.APP_SNAPSHOT_SECTION
+// Mit APP_SNAPSHOT_OUT rendert das Fenster offscreen und speichert ein PNG – funktioniert auch bei gesperrtem Bildschirm und ohne Bildschirmaufnahme-Recht. APP_SNAPSHOT_COMMAND schickt vorher einen Menübefehl (z.B. settings).
+const snapshotOut = process.env.APP_SNAPSHOT_OUT
 if (snapshotSection) {
   app.setPath('userData', join(app.getPath('temp'), 'naga-trinity-snapshot'))
+}
+
+const writeSnapshot = async (window: BrowserWindow, file: string) => {
+  const command = process.env.APP_SNAPSHOT_COMMAND as MenuCommand | undefined
+  if (command) window.webContents.send('menu:command', command)
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+  const image = await window.webContents.capturePage()
+  await writeFile(file, image.toPNG())
+  app.exit(0)
 }
 
 const TRAY_ICON_DATA_URL =
@@ -99,6 +112,7 @@ const createWindow = async () => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      offscreen: Boolean(snapshotOut),
     },
   })
 
@@ -126,6 +140,10 @@ const createWindow = async () => {
     await mainWindow.loadFile(join(__dirname, '../dist/index.html'), {
       query: snapshotSection ? { section: snapshotSection } : undefined,
     })
+  }
+  if (snapshotOut) {
+    await writeSnapshot(mainWindow, snapshotOut)
+    return
   }
   mainWindow.show()
 }
@@ -157,6 +175,15 @@ const showWindow = async () => {
   } else {
     await createWindow()
   }
+}
+
+// App-Menü-Befehle an den Renderer; bei verstecktem Fenster erst anzeigen.
+const sendMenuCommand = (command: MenuCommand) => {
+  void showWindow().then(() => mainWindow?.webContents.send('menu:command', command))
+}
+
+const refreshAppMenu = () => {
+  Menu.setApplicationMenu(buildAppMenu(cachedLang, sendMenuCommand, isDev))
 }
 
 const buildTrayMenu = () => {
@@ -313,16 +340,19 @@ ipcMain.handle('app:update-settings', async (_event, partial: Partial<AppSetting
   cachedRgbOffOnLock = next.settings?.rgbOffOnLock !== false
   cachedLang = detectInitialLang(next.settings?.language)
   tray?.setContextMenu(buildTrayMenu())
+  refreshAppMenu()
   return next.settings ?? { rgbOffOnLock: true }
 })
 
 app.whenReady().then(async () => {
   if (snapshotSection) {
+    refreshAppMenu()
     await createWindow()
     return
   }
   ensureAccessibilityPermission()
   await refreshSettingsCache()
+  refreshAppMenu()
   registerPowerHandlers()
   createTray()
   setInterval(() => void pollLiveDpi(), LIVE_DPI_INTERVAL_MS)
