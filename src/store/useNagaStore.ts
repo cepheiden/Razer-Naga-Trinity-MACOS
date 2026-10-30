@@ -130,11 +130,19 @@ const replaceActive = (store: ProfileStore, profile: NagaProfile): ProfileStore 
   profiles: store.profiles.map((entry) => (entry.id === profile.id ? profile : entry)),
 })
 
+const SECTION_IDS: readonly SectionId[] = ['lighting', 'performance', 'buttons', 'macros']
+
+// Snapshot-Modus: main.ts hängt ?section=… an, damit scripts/snapshot.sh jede Seite direkt öffnen kann.
+const initialSection = (): SectionId => {
+  const requested = new URLSearchParams(window.location.search).get('section')
+  return SECTION_IDS.find((id) => id === requested) ?? 'lighting'
+}
+
 export const useNagaStore = create<NagaState>((set, get) => ({
   store: fallbackStore(),
   device: { connected: false, interfaces: 0 },
   liveDpi: null,
-  section: 'lighting',
+  section: initialSection(),
   notice: null,
   isApplying: false,
   hasUnsavedChanges: false,

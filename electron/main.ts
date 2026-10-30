@@ -32,6 +32,12 @@ import type { AppSettings, LiveDpi, NagaProfile, ProfileStore, RgbSettings } fro
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL)
 
+// Snapshot-Modus (scripts/snapshot.sh): eigener userData-Ordner mit Default-Profil, kein Apply, keine USB-Writes, keine Shortcuts – die echten Profile und die Maus bleiben unberührt.
+const snapshotSection = process.env.APP_SNAPSHOT_SECTION
+if (snapshotSection) {
+  app.setPath('userData', join(app.getPath('temp'), 'naga-trinity-snapshot'))
+}
+
 const TRAY_ICON_DATA_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAO0lEQVR4nGNgGOzgPxRTpJksQ9A1k2QILs1EGUJIM15DiNWM0xCKDaDYC8QaQhSgSDMuQ8gCFGmmDwAAhdVTrfcfBBYAAAAASUVORK5CYII='
 
@@ -113,9 +119,13 @@ const createWindow = async () => {
   })
 
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
-    await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
+    const url = new URL(process.env.VITE_DEV_SERVER_URL)
+    if (snapshotSection) url.searchParams.set('section', snapshotSection)
+    await mainWindow.loadURL(url.toString())
   } else {
-    await mainWindow.loadFile(join(__dirname, '../dist/index.html'))
+    await mainWindow.loadFile(join(__dirname, '../dist/index.html'), {
+      query: snapshotSection ? { section: snapshotSection } : undefined,
+    })
   }
   mainWindow.show()
 }
@@ -307,6 +317,10 @@ ipcMain.handle('app:update-settings', async (_event, partial: Partial<AppSetting
 })
 
 app.whenReady().then(async () => {
+  if (snapshotSection) {
+    await createWindow()
+    return
+  }
   ensureAccessibilityPermission()
   await refreshSettingsCache()
   registerPowerHandlers()
