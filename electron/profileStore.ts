@@ -11,7 +11,7 @@ import type {
   SidePlate,
 } from './types'
 
-const STORE_VERSION = 2
+const STORE_VERSION = 3
 
 const defaultSettings = (): AppSettings => ({
   rgbOffOnLock: true,
@@ -125,6 +125,21 @@ const migrateButtons = (
   return expected.map((entry) => byId.get(entry.id) ?? entry)
 }
 
+// Bis Store-Version 2 waren die Side-Defaults "1".."12" (12er) bzw. "F1".."F7" (7er/2er). Der Treiber hat 'key' damals ignoriert und immer die Razer-Defaults geschrieben – auf die echten Defaults umstellen, damit Apply dasselbe Verhalten behält ("10".."12" sind keine schreibbaren Tasten).
+const legacySideDefault = (plate: SidePlate, index: number) =>
+  plate === 'twelve' ? `${index + 1}` : `F${index + 1}`
+
+const migrateLegacySideDefaults = (profile: NagaProfile): NagaProfile => ({
+  ...profile,
+  buttons: profile.buttons.map((button) => {
+    if (!button.id.startsWith('side-') || button.action !== 'key') return button
+    const index = Number(button.id.slice('side-'.length)) - 1
+    return button.value === legacySideDefault(profile.sidePlate, index)
+      ? { ...button, value: SIDE_DEFAULT_KEYS[index] }
+      : button
+  }),
+})
+
 export const createDefaultProfile = (
   overrides: Partial<NagaProfile> = {},
 ): NagaProfile => {
@@ -181,7 +196,9 @@ const isLegacyArray = (raw: unknown): raw is NagaProfile[] => Array.isArray(raw)
 
 const migrate = (raw: unknown): ProfileStore => {
   if (isLegacyArray(raw)) {
-    const profiles = raw.map((legacy) => createDefaultProfile(legacy as Partial<NagaProfile>))
+    const profiles = raw.map((legacy) =>
+      migrateLegacySideDefaults(createDefaultProfile(legacy as Partial<NagaProfile>)),
+    )
     return {
       version: STORE_VERSION,
       activeProfileId: profiles[0]?.id ?? createInitialStore().activeProfileId,
@@ -191,9 +208,11 @@ const migrate = (raw: unknown): ProfileStore => {
 
   if (raw && typeof raw === 'object' && 'profiles' in raw) {
     const store = raw as Partial<ProfileStore>
-    const profiles = (store.profiles ?? []).map((profile) =>
-      createDefaultProfile(profile as Partial<NagaProfile>),
-    )
+    const isLegacySideDefaults = (store.version ?? 0) < 3
+    const profiles = (store.profiles ?? []).map((profile) => {
+      const next = createDefaultProfile(profile as Partial<NagaProfile>)
+      return isLegacySideDefaults ? migrateLegacySideDefaults(next) : next
+    })
     if (profiles.length === 0) {
       return createInitialStore()
     }
