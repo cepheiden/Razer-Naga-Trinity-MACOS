@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import i18n from '../i18n'
+import { buildButtonsForPlate } from '../../electron/buttonLayout'
 import type {
   ApplyResult,
   DeviceInfo,
@@ -50,37 +51,6 @@ const newId = () =>
     ? crypto.randomUUID()
     : `id-${Math.random().toString(36).slice(2, 11)}`
 
-const SIDE_PLATE_LABELS: Record<SidePlate, string[]> = {
-  two: ['Side 1', 'Side 2'],
-  seven: ['Side 1', 'Side 2', 'Side 3', 'Side 4', 'Side 5', 'Side 6', 'Side 7'],
-  twelve: Array.from({ length: 12 }, (_, index) => `Numpad ${index + 1}`),
-}
-
-const SIDE_DEFAULT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=']
-
-const baseBindings = (): NagaProfile['buttons'] => [
-  { id: 'base-1', label: 'Left Click', hardwareIndex: 1, action: 'default', value: 'Mouse 1' },
-  { id: 'base-2', label: 'Right Click', hardwareIndex: 2, action: 'default', value: 'Mouse 2' },
-  { id: 'base-3', label: 'Scroll Click', hardwareIndex: 3, action: 'default', value: 'Mouse 3' },
-  { id: 'base-4', label: 'Scroll Up', hardwareIndex: 4, action: 'default', value: 'Wheel ↑' },
-  { id: 'base-5', label: 'Scroll Down', hardwareIndex: 5, action: 'default', value: 'Wheel ↓' },
-  { id: 'base-6', label: 'Wheel Tilt Left', hardwareIndex: 6, action: 'default', value: 'Browser ←' },
-  { id: 'base-7', label: 'Wheel Tilt Right', hardwareIndex: 7, action: 'default', value: 'Browser →' },
-  { id: 'base-8', label: 'DPI Up', hardwareIndex: 8, action: 'dpi-up', value: 'DPI +' },
-  { id: 'base-9', label: 'DPI Down', hardwareIndex: 9, action: 'dpi-down', value: 'DPI -' },
-]
-
-const buildButtons = (plate: SidePlate): NagaProfile['buttons'] => {
-  const side = SIDE_PLATE_LABELS[plate].map((label, index) => ({
-    id: `side-${index + 1}`,
-    label,
-    hardwareIndex: 10 + index,
-    action: 'key' as const,
-    value: SIDE_DEFAULT_KEYS[index],
-  }))
-  return [...baseBindings(), ...side]
-}
-
 const fallbackProfile = (): NagaProfile => ({
   id: 'fallback',
   name: 'Naga Trinity',
@@ -110,7 +80,7 @@ const fallbackProfile = (): NagaProfile => ({
     ],
   },
   pollingRate: 1000,
-  buttons: buildButtons('twelve'),
+  buttons: buildButtonsForPlate('twelve'),
   macros: [],
   createdAt: Date.now(),
   updatedAt: Date.now(),
@@ -313,7 +283,7 @@ export const useNagaStore = create<NagaState>((set, get) => ({
     get().updateActive((profile) => ({
       ...profile,
       sidePlate: plate,
-      buttons: buildButtons(plate),
+      buttons: buildButtonsForPlate(plate),
     }))
   },
 

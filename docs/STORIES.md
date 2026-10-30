@@ -60,5 +60,5 @@ Die 9 Grundtasten lassen sich nicht auf die Maus schreiben. Die App zeigt das, s
 
 ## M3 – Code
 
-### S10 Gemeinsame Defaults · todo
+### S10 Gemeinsame Defaults · done
 - `BASE_BUTTONS`, `SIDE_PLATE_LABELS`, `SIDE_DEFAULT_KEYS` liegen in einem Modul, das Main und Renderer importieren; keine Kopien mehr in `useNagaStore.ts` und `profileStore.ts`.

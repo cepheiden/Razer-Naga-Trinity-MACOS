@@ -46,7 +46,9 @@ Spectrum/wave/reactive use the generic ext_matrix per-zone (`cls 0x0f cmd 0x02`)
 - `electron/nagaDriver.ts` — USB control-transfer driver. Exports `applyHardwareProfile`, `applyRgbOnly`, `setRgbOff`, `listNagaDevices`. All async.
 - `electron/main.ts` — IPC handlers + `powerMonitor` hooks (`lock-screen` / `unlock-screen` / `suspend` / `resume` → brightness 0 / re-apply active profile).
 - `electron/profileStore.ts` — JSON persistence at `app.getPath('userData')/profiles.json`. Has `migrateButtons` for old → new base-button layout migration (detects legacy `base-6` with `action=dpi-up`).
-- `src/store/useNagaStore.ts` — Zustand store + its own copy of `baseBindings` / `SIDE_PLATE_LABELS` (kept in sync with `profileStore.ts` manually — duplicated knowledge).
+- `electron/buttonLayout.ts` — shared button layout (`SIDE_PLATE_LABELS`, `SIDE_DEFAULT_KEYS`, `buildButtonsForPlate`), no Node/Electron imports, used by `profileStore.ts` and the renderer store.
+- `src/store/useNagaStore.ts` — Zustand store (renderer).
+- `scripts/snapshot.sh` — screenshot per page into `docs/snapshots/` with its own userData folder and no USB writes (`APP_SNAPSHOT_SECTION`, `APP_SNAPSHOT_WIDTH`). Backlog in `docs/STORIES.md`, architecture in `ARCHITECTURE.md`.
 
 ## Base button layout (9 buttons, post Wheel-Tilt migration)
 
@@ -131,7 +133,7 @@ The 12- and 7-button plates share factory defaults (1..7), so seeing the right c
 - ✅ **Bilingual UI (DE / EN)** done (2026-05-12 night) — `src/i18n/` with `i18next` + `react-i18next` + browser language detector. Auto-detects from `navigator.language`, manual switch in sidebar footer (`.lang-button` DE / EN), persisted in `localStorage` key `naga:lang`. Renderer also writes the choice back via `app:update-settings` → main process re-caches `cachedLang` and rebuilds the tray menu in place. Main has its own small `TRAY_STRINGS` table (DE/EN) since the tray is built before the renderer loads.
 - ✅ **RGB-off-on-lock toggle** done (2026-05-12 night) — new `AppSettings.rgbOffOnLock` (default `true`), stored in `profiles.json`. Tray menu checkbox "RGB beim Sperren ausschalten" / "Turn RGB off when screen locks". `powerMonitor` lock-screen/suspend handlers check the setting before calling `setRgbOff`; unlock/resume always restore. IPC `app:get-settings` / `app:update-settings`.
 - **Variante B** (native macOS CGEventTap with USB Vendor/Product filter via Swift addon) — only needed if user wants macros on side buttons currently bound to letters/symbols (their Btn1-5 = ' ` h i k). Architectural blueprint already in `## About OpenRazer as a reference source` above. Estimated ~3-4h.
-- The two `BASE_BUTTONS` / `SIDE_PLATE_LABELS` duplicates between `useNagaStore.ts` and `profileStore.ts` should be extracted to a shared module.
+- ✅ Shared button layout in `electron/buttonLayout.ts` (2026-10-30).
 - UI: surface which side buttons have active shortcuts vs. skipped (Engine returns `{ registered, skippedUnsafe, noKeymap }` from `registerProfileShortcuts`, but main.ts doesn't pass it to renderer yet).
 - UI: settings toggle for "open at login" (currently only in tray menu).
 
