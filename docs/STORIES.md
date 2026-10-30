@@ -11,7 +11,7 @@ Jede Seite lässt sich ohne echte Profile und ohne Writes auf die Maus öffnen u
 
 ## M1 – Ehrlich und sauber
 
-### S1 Performance-Layout passt ins Fenster · todo
+### S1 Performance-Layout passt ins Fenster · done
 Bei 1280 × 860 und bei der Mindestbreite 1080 läuft nichts aus dem Fenster.
 - Die Polling-Karten (125 / 500 / 1000 Hz) stehen vollständig und ohne Umbruch der Hz-Zahl in der rechten Spalte.
 - Die Seitenplatten-Zeilen brechen „12-Tasten“ nicht um, die Beschreibung darf kürzen.

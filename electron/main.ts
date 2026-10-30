@@ -85,7 +85,7 @@ const createWindow = async () => {
   }
 
   mainWindow = new BrowserWindow({
-    width: 1280,
+    width: Number(process.env.APP_SNAPSHOT_WIDTH) || 1280,
     height: 860,
     minWidth: 1080,
     minHeight: 720,

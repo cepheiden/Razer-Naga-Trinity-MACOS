@@ -4,6 +4,7 @@
 #   scripts/snapshot.sh                 alle Seiten
 #   scripts/snapshot.sh buttons macros  nur diese Seiten
 #   NO_BUILD=1 scripts/snapshot.sh      ohne Neubau
+#   WIDTH=1080 scripts/snapshot.sh      Fensterbreite (Mindestbreite 1080) → <seite>-1080.png
 set -euo pipefail
 cd "${0:A:h}/.."
 
@@ -26,7 +27,7 @@ window_id() {
 }
 
 for page in $pages; do
-  env -u ELECTRON_RUN_AS_NODE APP_SNAPSHOT_SECTION="$page" "$electron_bin" . >/dev/null 2>&1 &
+  env -u ELECTRON_RUN_AS_NODE APP_SNAPSHOT_SECTION="$page" APP_SNAPSHOT_WIDTH="${WIDTH:-}" "$electron_bin" . >/dev/null 2>&1 &
   pid=$!
   wid=''
   for _ in {1..60}; do
@@ -40,8 +41,9 @@ for page in $pages; do
     exit 1
   fi
   sleep 1.5
-  screencapture -x -o -l "$wid" "$out/$page.png"
+  file="$out/$page${WIDTH:+-$WIDTH}.png"
+  screencapture -x -o -l "$wid" "$file"
   kill $pid 2>/dev/null || true
   wait $pid 2>/dev/null || true
-  echo "$out/$page.png"
+  echo "$file"
 done

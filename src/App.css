@@ -1076,7 +1076,8 @@ output {
 
 /* ---------- Performance Section ---------- */
 .performance-section {
-  grid-template-columns: 1.4fr 1fr;
+  /* minmax(0, …): fr-Spalten sind sonst nie schmaler als ihr Inhalt und drücken die rechte Spalte aus dem Fenster. */
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   grid-template-areas:
     'dpi polling'
     'dpi plate';
@@ -1279,16 +1280,13 @@ output {
 .polling-grid,
 .plate-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.plate-grid {
   grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .polling-tile,
 .plate-tile {
+  min-width: 0;
   padding: 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
@@ -1302,7 +1300,8 @@ output {
 }
 
 .polling-tile strong {
-  font-size: 18px;
+  white-space: nowrap;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-0);
 }
@@ -1332,13 +1331,29 @@ output {
   color: var(--accent);
 }
 
+.polling-tile,
 .plate-tile {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.polling-tile span,
+.plate-tile span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plate-tile small {
+  white-space: nowrap;
 }
 
 .plate-tile strong {
+  white-space: nowrap;
   font-size: 14px;
 }
 
