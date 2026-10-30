@@ -792,11 +792,6 @@ button.primary-button {
   animation-delay: 0.5s;
 }
 
-.mouse-visualizer[data-animation='glow-wave'] .side-zone {
-  animation: waveBeat 1.6s ease-in-out infinite;
-  animation-delay: 1s;
-}
-
 .mouse-visualizer[data-animation='glow-reactive'] .zone {
   animation: reactive 2.6s steps(1) infinite;
 }

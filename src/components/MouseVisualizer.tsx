@@ -57,11 +57,12 @@ export function MouseVisualizer({ profile, compact = false }: Props) {
   const { rgb, sidePlate } = profile
   const animation = effectAnimation(rgb)
 
-  const zoneColor = (zone: keyof RgbSettings['zones']) => {
-    const config = rgb.zones[zone]
-    if (!config.enabled || rgb.effect === 'off') return '#101410'
-    if (rgb.syncZones) return rgb.color
-    return config.color
+  // Bildet ab, was der Treiber wirklich schreibt: Static/Breathing setzen eine Farbe auf alle Zonen, Underglow (LED 0x00) überschreibt Logo und Mausrad. Die Seitenplatten haben keine LEDs.
+  const zoneColor = (zone: 'logo' | 'scroll') => {
+    if (rgb.effect === 'off') return '#101410'
+    if (rgb.effect === 'static' || rgb.effect === 'breathing' || rgb.syncZones) return rgb.color
+    if (rgb.zones.side.enabled) return rgb.zones.side.color
+    return rgb.zones[zone].enabled ? rgb.zones[zone].color : '#101410'
   }
 
   const intensity = rgb.effect === 'off' ? 0 : rgb.brightness / 100
@@ -75,7 +76,6 @@ export function MouseVisualizer({ profile, compact = false }: Props) {
         {
           '--logo-color': zoneColor('logo'),
           '--scroll-color': zoneColor('scroll'),
-          '--side-color': zoneColor('side'),
           '--glow-intensity': intensity.toFixed(2),
         } as React.CSSProperties
       }
@@ -133,7 +133,7 @@ export function MouseVisualizer({ profile, compact = false }: Props) {
           </g>
         </g>
 
-        <g className="zone side-zone">
+        <g className="side-buttons">
           {sideButtons.map((btn) => (
             <g key={btn.label}>
               <rect
@@ -145,22 +145,13 @@ export function MouseVisualizer({ profile, compact = false }: Props) {
                 fill="rgba(0,0,0,0.55)"
                 stroke="rgba(255,255,255,0.06)"
               />
-              <rect
-                x={btn.x + 2}
-                y={btn.y + 2}
-                width={btn.w - 4}
-                height={btn.h - 4}
-                rx={4}
-                fill="var(--side-color)"
-                opacity={intensity * 0.35}
-              />
               <text
                 x={btn.x + btn.w / 2}
                 y={btn.y + btn.h / 2 + 4}
                 textAnchor="middle"
                 fontSize="10"
                 fontWeight="700"
-                fill="rgba(255,255,255,0.65)"
+                fill="rgba(255,255,255,0.4)"
               >
                 {btn.label}
               </text>

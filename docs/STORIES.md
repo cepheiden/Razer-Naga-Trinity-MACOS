@@ -23,7 +23,7 @@ Keine englischen Reste oder internen Namen in der deutschen Oberfläche.
 - Effektnamen (Static, Spectrum …) bleiben als Razer-Begriffe, ihre Beschreibungen sind deutsch.
 - Snapshots: alle Seiten, DE.
 
-### S3 Vorschau zeigt nur echte LEDs · todo
+### S3 Vorschau zeigt nur echte LEDs · done
 Die Live-Vorschau leuchtet nur dort, wo die Maus LEDs hat: Mausrad und Logo.
 - Die Seitentasten der Vorschau sind unbeleuchtet (neutral).
 - Underglow bleibt als Schalter „alle Zonen synchron“, ohne eine eigene leuchtende Fläche vorzutäuschen.
