@@ -280,11 +280,22 @@ export const useNagaStore = create<NagaState>((set, get) => ({
   },
 
   setSidePlate(plate) {
-    get().updateActive((profile) => ({
-      ...profile,
-      sidePlate: plate,
-      buttons: buildButtonsForPlate(plate),
-    }))
+    const active = get().store.profiles.find((entry) => entry.id === get().store.activeProfileId)
+    if (active?.sidePlate === plate) return
+    // Beim Plattenwechsel Belegungen (inkl. Makro-Zuweisungen) der Seitentasten behalten, die es auf der neuen Platte auch gibt – vorher wurde alles auf Standard zurückgesetzt.
+    get().updateActive((profile) => {
+      const previous = new Map(profile.buttons.map((button) => [button.id, button]))
+      return {
+        ...profile,
+        sidePlate: plate,
+        buttons: buildButtonsForPlate(plate).map((button) => {
+          const kept = button.id.startsWith('side-') ? previous.get(button.id) : undefined
+          return kept
+            ? { ...button, action: kept.action, value: kept.value, macroId: kept.macroId }
+            : button
+        }),
+      }
+    })
   },
 
   addMacro() {
