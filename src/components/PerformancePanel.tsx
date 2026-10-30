@@ -19,6 +19,7 @@ export function PerformancePanel() {
   const profile = useActiveProfile()
   const updateActive = useNagaStore((state) => state.updateActive)
   const setSidePlate = useNagaStore((state) => state.setSidePlate)
+  const liveDpi = useNagaStore((state) => state.liveDpi)
   const { dpi, pollingRate, sidePlate } = profile
 
   const activeStage = dpi.stages[dpi.activeStage - 1] ?? dpi.stages[0]
@@ -90,6 +91,19 @@ export function PerformancePanel() {
             <strong>{activeStage?.x ?? 1800}</strong>
             <span>{t('performance.activeDpi')}</span>
           </div>
+          {liveDpi && (
+            <div className="dpi-live" aria-live="polite">
+              <span className="pill good">
+                <span className="pill-dot" />
+                {t('performance.liveOnMouse')}
+              </span>
+              <strong>
+                {liveDpi.x}
+                {liveDpi.y !== liveDpi.x ? ` × ${liveDpi.y}` : ''} DPI
+              </strong>
+              <span>{t('performance.liveStage', { stage: liveDpi.stage })}</span>
+            </div>
+          )}
           <div className="dpi-meta">
             <span>X · {activeStage?.x ?? 0}</span>
             <span>Y · {activeStage?.y ?? 0}</span>
@@ -99,8 +113,12 @@ export function PerformancePanel() {
         <div className="stage-list">
           {dpi.stages.map((stage, index) => {
             const isActive = index + 1 === dpi.activeStage
+            const isLive = index + 1 === liveDpi?.stage
             return (
-              <div className={`stage-row ${isActive ? 'active' : ''}`} key={stage.id}>
+              <div
+                className={`stage-row ${isActive ? 'active' : ''} ${isLive ? 'live' : ''}`}
+                key={stage.id}
+              >
                 <button
                   type="button"
                   className="stage-marker"

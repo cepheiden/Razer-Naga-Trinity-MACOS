@@ -3,6 +3,7 @@ import i18n from '../i18n'
 import type {
   ApplyResult,
   DeviceInfo,
+  LiveDpi,
   Macro,
   MacroStep,
   NagaProfile,
@@ -16,6 +17,8 @@ export type SectionId = 'lighting' | 'performance' | 'buttons' | 'macros'
 export interface NagaState {
   store: ProfileStore
   device: DeviceInfo
+  /** DPI, die gerade auf der Maus aktiv ist (folgt DPI+/DPI−); null = unbekannt bzw. Maus nicht da. */
+  liveDpi: LiveDpi | null
   section: SectionId
   notice: (ApplyResult & { tone: 'info' | 'success' | 'error' }) | null
   isApplying: boolean
@@ -130,6 +133,7 @@ const replaceActive = (store: ProfileStore, profile: NagaProfile): ProfileStore 
 export const useNagaStore = create<NagaState>((set, get) => ({
   store: fallbackStore(),
   device: { connected: false, interfaces: 0 },
+  liveDpi: null,
   section: 'lighting',
   notice: null,
   isApplying: false,
@@ -137,11 +141,13 @@ export const useNagaStore = create<NagaState>((set, get) => ({
 
   async init() {
     if (!window.naga) return
-    const [store, device] = await Promise.all([
+    window.naga.onLiveDpi((liveDpi) => set({ liveDpi }))
+    const [store, device, liveDpi] = await Promise.all([
       window.naga.readStore(),
       window.naga.scanDevice(),
+      window.naga.getLiveDpi(),
     ])
-    set({ store, device })
+    set({ store, device, liveDpi })
   },
 
   async rescan() {

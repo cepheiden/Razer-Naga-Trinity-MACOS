@@ -6,6 +6,7 @@ import { useActiveProfile, useNagaStore } from '../store/useNagaStore'
 export function Sidebar() {
   const { t, i18n } = useTranslation()
   const device = useNagaStore((state) => state.device)
+  const liveDpi = useNagaStore((state) => state.liveDpi)
   const store = useNagaStore((state) => state.store)
   const active = useActiveProfile()
   const selectProfile = useNagaStore((state) => state.selectProfile)
@@ -99,8 +100,12 @@ export function Sidebar() {
 
       <footer className="sidebar-footer">
         <div className="footer-stage">
-          <span>{t('sidebar.activeStage')}</span>
-          <strong>{activeStage?.x ?? 1800} {t('sidebar.dpiSuffix')}</strong>
+          <span>
+            {liveDpi ? t('sidebar.liveStage', { stage: liveDpi.stage }) : t('sidebar.activeStage')}
+          </span>
+          <strong>
+            {liveDpi?.x ?? activeStage?.x ?? 1800} {t('sidebar.dpiSuffix')}
+          </strong>
         </div>
         <div className="lang-switch" role="group" aria-label={t('topbar.language')}>
           <Languages size={13} />

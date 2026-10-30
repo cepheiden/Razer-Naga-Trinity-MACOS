@@ -12,7 +12,8 @@
     "profiles": "Profile",
     "addProfile": "Profil hinzufügen",
     "activeStage": "Aktive Stufe",
-    "dpiSuffix": "DPI"
+    "dpiSuffix": "DPI",
+    "liveStage": "Maus · Stufe {{stage}}"
   },
   "topbar": {
     "profileEyebrow": "Profil",
@@ -96,6 +97,8 @@
     "dpiStagesTitle": "DPI-Stufen",
     "addStage": "Stufe hinzufügen",
     "activeDpi": "Active DPI",
+    "liveOnMouse": "Live an der Maus",
+    "liveStage": "Stufe {{stage}} auf der Maus",
     "stageActivateAria": "Stufe {{n}} aktivieren",
     "removeStageAria": "Stufe entfernen",
     "quickSelect": "Schnellauswahl",

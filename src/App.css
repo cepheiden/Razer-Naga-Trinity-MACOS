@@ -1127,6 +1127,29 @@ output {
   margin-top: 6px;
 }
 
+.dpi-live {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-left: 20px;
+  border-left: 1px solid var(--border);
+}
+
+.dpi-live strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: #00d9ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.dpi-live > span:last-child {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-2);
+}
+
 .dpi-meta {
   display: flex;
   flex-direction: column;
@@ -1158,6 +1181,10 @@ output {
 .stage-row.active {
   border-color: rgba(0, 255, 102, 0.4);
   background: rgba(0, 255, 102, 0.06);
+}
+
+.stage-row.live {
+  box-shadow: inset 3px 0 0 #00d9ff;
 }
 
 .stage-marker {

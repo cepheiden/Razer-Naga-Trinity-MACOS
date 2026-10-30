@@ -10,7 +10,14 @@ import {
   Tray,
 } from 'electron'
 import { join } from 'node:path'
-import { applyHardwareProfile, applyRgbOnly, listNagaDevices, setRgbOff } from './nagaDriver'
+import {
+  applyHardwareProfile,
+  applyRgbOnly,
+  listNagaDevices,
+  onNagaAttached,
+  readLiveDpi,
+  setRgbOff,
+} from './nagaDriver'
 import { registerProfileShortcuts, unregisterAllMacroShortcuts } from './macroEngine'
 import {
   deleteProfile,
@@ -21,7 +28,7 @@ import {
   upsertProfile,
   writeStore,
 } from './profileStore'
-import type { AppSettings, NagaProfile, ProfileStore, RgbSettings } from './types'
+import type { AppSettings, LiveDpi, NagaProfile, ProfileStore, RgbSettings } from './types'
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL)
 
@@ -113,6 +120,25 @@ const createWindow = async () => {
   mainWindow.show()
 }
 
+// Live-DPI nur pollen, solange das Fenster sichtbar ist – im Tray-Betrieb kein USB-Verkehr.
+const LIVE_DPI_INTERVAL_MS = 1000
+let liveDpi: LiveDpi | null = null
+let isPollingDpi = false
+
+const pollLiveDpi = async () => {
+  if (isPollingDpi || !mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) return
+  isPollingDpi = true
+  try {
+    const next = await readLiveDpi()
+    if (next === undefined) return
+    if (JSON.stringify(next) === JSON.stringify(liveDpi)) return
+    liveDpi = next
+    mainWindow?.webContents.send('device:live-dpi', liveDpi)
+  } finally {
+    isPollingDpi = false
+  }
+}
+
 const showWindow = async () => {
   app.dock?.show()
   if (mainWindow) {
@@ -200,13 +226,14 @@ const applyActiveProfile = async () => {
   console.log('[naga] macroShortcuts:', reg)
 }
 
-const restoreActiveProfileRgb = async () => {
+const restoreActiveProfileRgb = async (delayMs = 600) => {
   const store = await readStore()
   const active = store.profiles.find((p) => p.id === store.activeProfileId)
   if (!active) return
-  // Kurz warten, damit USB nach Wake bzw. Unlock wirklich verfügbar ist.
-  await new Promise((resolve) => setTimeout(resolve, 600))
-  void applyRgbOnly(active.rgb)
+  // Kurz warten, damit USB nach Wake, Unlock bzw. Anstecken wirklich verfügbar ist.
+  await new Promise((resolve) => setTimeout(resolve, delayMs))
+  const result = await applyRgbOnly(active.rgb)
+  console.log('[naga] restore RGB:', result.ok ? 'OK' : 'FAIL', '-', result.message)
 }
 
 const shouldDimOnLock = async () => {
@@ -231,9 +258,14 @@ const registerPowerHandlers = () => {
   powerMonitor.on('resume', () => {
     void restoreActiveProfileRgb()
   })
+  // Nach dem Anstecken braucht die FW etwas länger als nach Unlock, bis sie LED-Reports annimmt.
+  onNagaAttached(() => {
+    void restoreActiveProfileRgb(1500)
+  })
 }
 
 ipcMain.handle('device:scan', () => listNagaDevices())
+ipcMain.handle('device:live-dpi', () => liveDpi)
 ipcMain.handle('store:read', () => readStore())
 ipcMain.handle('store:write', async (_event, store: ProfileStore) => writeStore(store))
 ipcMain.handle('profile:upsert', async (_event, profile: NagaProfile) => upsertProfile(profile))
@@ -279,6 +311,7 @@ app.whenReady().then(async () => {
   await refreshSettingsCache()
   registerPowerHandlers()
   createTray()
+  setInterval(() => void pollLiveDpi(), LIVE_DPI_INTERVAL_MS)
 
   // Beim Auto-Login mit openAsHidden startet die App ohne sichtbares Fenster – nur Tray.
   const launchedHidden = app.getLoginItemSettings().wasOpenedAsHidden

@@ -115,6 +115,14 @@ export interface DeviceInfo {
   interfaces: number
 }
 
+/** DPI, die gerade auf der Maus aktiv ist (live per GET_REPORT abgefragt, ändert sich mit DPI+/DPI−). */
+export interface LiveDpi {
+  x: number
+  y: number
+  /** 1-basierte Stufe laut Maus. */
+  stage: number
+}
+
 export interface ApplyResult {
   ok: boolean
   /** Fallback string in German – used when no key is set or the renderer can't translate. */

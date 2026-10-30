@@ -3,6 +3,7 @@ import type {
   AppSettings,
   ApplyResult,
   DeviceInfo,
+  LiveDpi,
   NagaProfile,
   ProfileStore,
   RgbSettings,
@@ -10,6 +11,14 @@ import type {
 
 const api = {
   scanDevice: () => ipcRenderer.invoke('device:scan') as Promise<DeviceInfo>,
+  getLiveDpi: () => ipcRenderer.invoke('device:live-dpi') as Promise<LiveDpi | null>,
+  onLiveDpi: (callback: (dpi: LiveDpi | null) => void) => {
+    const listener = (_event: unknown, dpi: LiveDpi | null) => callback(dpi)
+    ipcRenderer.on('device:live-dpi', listener)
+    return () => {
+      ipcRenderer.removeListener('device:live-dpi', listener)
+    }
+  },
   readStore: () => ipcRenderer.invoke('store:read') as Promise<ProfileStore>,
   writeStore: (store: ProfileStore) =>
     ipcRenderer.invoke('store:write', store) as Promise<ProfileStore>,

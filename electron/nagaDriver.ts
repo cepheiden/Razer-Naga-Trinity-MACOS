@@ -1,10 +1,11 @@
-import { findByIds, type Device } from 'usb'
+import { findByIds, usb, type Device } from 'usb'
 import type {
   ApplyResult,
   ButtonBinding,
   DeviceInfo,
   DpiSettings,
   LedZone,
+  LiveDpi,
   NagaProfile,
   PollingRate,
   RgbSettings,
@@ -318,7 +319,8 @@ const setDpiStages = async (device: Device, dpi: DpiSettings) => {
   const stages = dpi.stages.slice(0, 5)
   const dataSize = 2 + stages.length * 7
   const report = createReport(DPI_CLASS, 0x06, dataSize)
-  report[8] = 0x00
+  // VARSTORE: 0x00 schreibt nur die Laufzeit-Liste, die nach dem Abstecken auf die EEPROM-Liste zurückfällt. 0x01 aktualisiert beide (verifiziert 2026-10-30).
+  report[8] = 0x01
   report[9] = clamp(dpi.activeStage, 1, stages.length)
   report[10] = stages.length
 
@@ -488,13 +490,13 @@ const setBindingReport = (device: Device, report: Buffer) =>
     )
   })
 
-const getBindingReport = (device: Device) =>
+const getBindingReport = (device: Device, iface = BINDING_INTERFACE) =>
   new Promise<Buffer>((resolve, reject) => {
     device.controlTransfer(
       GET_REPORT_REQUEST_TYPE,
       GET_REPORT_REQUEST,
       SET_REPORT_VALUE,
-      BINDING_INTERFACE,
+      iface,
       RAZER_REPORT_LEN,
       (err, data) =>
         err || !Buffer.isBuffer(data)
@@ -550,6 +552,46 @@ const applyButtonBindings = async (device: Device, bindings: readonly SourceBind
       await writeButtonBinding(device, slot, binding)
     }
   }
+}
+
+// Live-Abfrage auf iface 0x02 (wie alle Nicht-Binding-Reports). Antworten ohne OK-Status oder mit fremdem cls/cmd verwerfen – bei Fremdzugriffen liefert die FW sonst Müll (z.B. 255/8).
+const queryReport = async (device: Device, request: Buffer) => {
+  setCrc(request)
+  await controlSetReport(device, request, 0x02)
+  await wait(20)
+  const reply = await getBindingReport(device, 0x02)
+  if (reply[0] !== RAZER_STATUS_OK || reply[6] !== request[6] || reply[7] !== request[7]) {
+    throw new Error(`Ungültige Antwort auf cls 0x${request[6].toString(16)} cmd 0x${request[7].toString(16)}.`)
+  }
+  return reply
+}
+
+// DPI+/DPI− schaltet die FW selbst um; die Vendor-Notification dazu liegt auf einem von macOS gesperrten Interface, deshalb pollt main.ts diese Abfrage. cmd 0x85 = aktuelle DPI, cmd 0x86 = Stufenliste inkl. aktiver Stufe (verifiziert: beide folgen DPI+/DPI−).
+// null = Maus nicht angeschlossen, undefined = Antwort unbrauchbar (Wert beibehalten).
+export const readLiveDpi = async (): Promise<LiveDpi | null | undefined> => {
+  if (!findByIds(RAZER_VENDOR_ID, NAGA_TRINITY_PRODUCT_ID)) return null
+  try {
+    return await withDevice(async (device) => {
+      const current = await queryReport(device, createReport(DPI_CLASS, 0x85, 0x07))
+      // Laufzeit-Liste (0x00) – folgt DPI+/DPI−; die EEPROM-Liste (0x01) kann davon abweichen.
+      const stageReply = await queryReport(device, createReport(DPI_CLASS, 0x86, 0x26))
+      return {
+        x: (current[9] << 8) | current[10],
+        y: (current[11] << 8) | current[12],
+        stage: stageReply[9],
+      }
+    })
+  } catch {
+    return undefined
+  }
+}
+
+// RGB ist flüchtig und nach jedem Abstecken weg; DPI, Polling und Bindings bleiben im EEPROM (verifiziert per Read-Back nach Replug). main.ts setzt beim Anstecken deshalb nur RGB neu.
+export const onNagaAttached = (callback: () => void) => {
+  usb.on('attach', (device) => {
+    const { idVendor, idProduct } = device.deviceDescriptor
+    if (idVendor === RAZER_VENDOR_ID && idProduct === NAGA_TRINITY_PRODUCT_ID) callback()
+  })
 }
 
 export const listNagaDevices = (): DeviceInfo => {
